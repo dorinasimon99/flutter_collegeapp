@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_collegeapp/app.dart';
+import 'package:flutter_collegeapp/courses/CoursesCubit.dart';
+import 'package:flutter_collegeapp/home/today_courses_list.dart';
 import 'package:flutter_collegeapp/menu/menu.dart';
+import 'package:flutter_collegeapp/models/CourseData.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class HomePage extends StatefulWidget {
@@ -9,68 +14,58 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  List<CourseData> _todayCourses = <CourseData>[];
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => MenuPage())),
-          icon: Image.asset('assets/hamburger.png'),
-          iconSize: 120,
-        ),
-        toolbarHeight: 100.0,
-        automaticallyImplyLeading: true,
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-      ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                AppLocalizations.of(context)?.today ?? 'Today',
-                style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 40, color: Colors.black),
-              ),
-              ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: 3,
-                  itemBuilder: (context, i){
-                    return Card(
-                      color: Color(0xFFC7E5C8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(10.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  "CourseName",
-                                  style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 24, color: Colors.black),
-                                ),
-                                Text(
-                                  "3 todo",
-                                  style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 24, color: Colors.black),
-                                )
-                              ],
-                            ),
-                            Text(
-                              "10:15 - 12:00",
-                              style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
-                            )
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-              )
-            ],
-          ),
-        ),
-      ),
-    );
+    return todayCoursesView(context, _todayCourses);
   }
 }
+
+Widget todayCoursesView(BuildContext context, List<CourseData> _todayCourses) {
+  return Scaffold(
+    appBar: AppBar(
+      leading: IconButton(
+        onPressed: () => Navigator.pushNamed(context, 'menu'),
+        icon: Image.asset('assets/hamburger.png'),
+        iconSize: 120,
+      ),
+      toolbarHeight: 100.0,
+      automaticallyImplyLeading: true,
+      backgroundColor: Colors.transparent,
+      shadowColor: Colors.transparent,
+    ),
+    body: Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              AppLocalizations.of(context)?.today ?? 'Today',
+              style: TextStyle(
+                  fontFamily: 'Glory-Semi', fontSize: 40, color: Colors.black),
+            ),
+            BlocBuilder<CoursesCubit, CoursesState>(
+              builder: (context, state) {
+                if(state is ListCoursesSuccess) {
+                  return  TodayCoursesList(
+                      courses: state.courses
+                        ..sort((a, b) {
+                          return a.time.compareTo(b.time);
+                        }));
+                } else if (state is ListCoursesFailure) {
+                  return Center(child: Text(state.exception.toString()));
+                } else {
+                  return LoadingView();
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+

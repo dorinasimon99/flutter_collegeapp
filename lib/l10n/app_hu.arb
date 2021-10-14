@@ -4,5 +4,11 @@
   "courses": "Tárgyak",
   "statistics": "Statisztikák",
   "study_cards": "Tanulókártyák",
-  "logout": "Kijelentkezés"
+  "logout": "Kijelentkezés",
+  "email": "E-mail cím",
+  "password": "Jelszó",
+  "username": "Felhasználónév",
+  "signin": "Bejelentkezés",
+  "or": "vagy",
+  "signup": "Regisztráció"
 }

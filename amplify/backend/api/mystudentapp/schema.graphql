@@ -1,0 +1,52 @@
+type UserData @model @auth(rules: [{allow: public}])  {
+  id: ID!
+  name: String!
+  username: String!
+  role: String!
+  courses: [UserCourse] @connection(name: "UserCourses")
+}
+
+type CourseData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  courseCode: String!
+  name: String!
+  users: [UserCourse] @connection(name: "CourseUsers")
+  credits: Int!
+  time: String!
+  teachers: [String]
+}
+
+type UserCourse @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  user: UserData! @connection(name: "UserCourses")
+  course: CourseData! @connection(name: "CourseUsers")
+  rating: String
+  ratingNum: Int
+  semester: Int
+  grade: Int
+}
+
+type CommentData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String
+  comment: String
+  coursename: String
+  teachername: String!
+}
+
+type TodoData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  done: Boolean!
+  ownerID: ID!
+  courseID: ID!
+  lessonID: ID
+}
+
+type LessonData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  title: String!
+  ownerID: ID!
+  courseID: ID!
+}
+ 
