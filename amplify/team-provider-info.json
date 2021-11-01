@@ -15,6 +15,12 @@
       "auth": {
         "mystudentapp61fa3dde": {},
         "userPoolGroups": {}
+      },
+      "function": {
+        "AdminQueries87193e7a": {
+          "deploymentBucketName": "amplify-mystudentapp-dev-204127-deployment",
+          "s3Key": "amplify-builds/AdminQueries87193e7a-625375786d6d7868732b-build.zip"
+        }
       }
     }
   }

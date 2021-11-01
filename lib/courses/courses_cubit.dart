@@ -1,7 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';
 
-import 'CoursesRepository.dart';
+import 'courses_repository.dart';
 
 abstract class CoursesState {}
 
@@ -37,20 +37,33 @@ class CoursesCubit extends Cubit<CoursesState> {
     }
   }
 
-  void getTodayCoursesFromAPI(String day) async {
+  void getLocalCourses() async {
     if (state is ListCoursesSuccess == false) {
       emit(LoadingCourses());
     }
+
     try {
-      final courses = await _coursesRepo.getTodayCoursesFromAPI(day);
+      final courses = await _coursesRepo.getLocalCourses();
       emit(ListCoursesSuccess(courses: courses));
     } catch (e) {
       emit(ListCoursesFailure(exception: e));
     }
   }
 
-  void createCourse(String name, String code, int credits, String time) async {
-    await _coursesRepo.createCourse(name, code, credits, time);
+  void getTeacherCourses(String teacherName) async {
+    if (state is ListCoursesSuccess == false) {
+      emit(LoadingCourses());
+    }
+    try {
+      final courses = await _coursesRepo.getTeacherCourses(teacherName);
+      emit(ListCoursesSuccess(courses: courses));
+    } catch (e) {
+      emit(ListCoursesFailure(exception: e));
+    }
+  }
+
+  void createCourse(CourseData course) async {
+    await _coursesRepo.createCourse(course);
     getCourses();
   }
 

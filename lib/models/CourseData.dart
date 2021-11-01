@@ -15,7 +15,6 @@
 
 // ignore_for_file: public_member_api_docs
 
-import 'ModelProvider.dart';
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
@@ -28,7 +27,6 @@ class CourseData extends Model {
   final String id;
   final String? _courseCode;
   final String? _name;
-  final List<UserCourse>? _users;
   final int? _credits;
   final String? _time;
   final List<String>? _teachers;
@@ -57,10 +55,6 @@ class CourseData extends Model {
     }
   }
   
-  List<UserCourse>? get users {
-    return _users;
-  }
-  
   int get credits {
     try {
       return _credits!;
@@ -81,14 +75,13 @@ class CourseData extends Model {
     return _teachers;
   }
   
-  const CourseData._internal({required this.id, required courseCode, required name, users, required credits, required time, teachers}): _courseCode = courseCode, _name = name, _users = users, _credits = credits, _time = time, _teachers = teachers;
+  const CourseData._internal({required this.id, required courseCode, required name, required credits, required time, teachers}): _courseCode = courseCode, _name = name, _credits = credits, _time = time, _teachers = teachers;
   
-  factory CourseData({String? id, required String courseCode, required String name, List<UserCourse>? users, required int credits, required String time, List<String>? teachers}) {
+  factory CourseData({String? id, required String courseCode, required String name, required int credits, required String time, List<String>? teachers}) {
     return CourseData._internal(
       id: id == null ? UUID.getUUID() : id,
       courseCode: courseCode,
       name: name,
-      users: users != null ? List<UserCourse>.unmodifiable(users) : users,
       credits: credits,
       time: time,
       teachers: teachers != null ? List<String>.unmodifiable(teachers) : teachers);
@@ -105,7 +98,6 @@ class CourseData extends Model {
       id == other.id &&
       _courseCode == other._courseCode &&
       _name == other._name &&
-      DeepCollectionEquality().equals(_users, other._users) &&
       _credits == other._credits &&
       _time == other._time &&
       DeepCollectionEquality().equals(_teachers, other._teachers);
@@ -130,12 +122,11 @@ class CourseData extends Model {
     return buffer.toString();
   }
   
-  CourseData copyWith({String? id, String? courseCode, String? name, List<UserCourse>? users, int? credits, String? time, List<String>? teachers}) {
+  CourseData copyWith({String? id, String? courseCode, String? name, int? credits, String? time, List<String>? teachers}) {
     return CourseData(
       id: id ?? this.id,
       courseCode: courseCode ?? this.courseCode,
       name: name ?? this.name,
-      users: users ?? this.users,
       credits: credits ?? this.credits,
       time: time ?? this.time,
       teachers: teachers ?? this.teachers);
@@ -145,43 +136,23 @@ class CourseData extends Model {
     : id = json['id'],
       _courseCode = json['courseCode'],
       _name = json['name'],
-      _users = json['users'] is List
-        ? (json['users'] as List)
-          .where((e) => e?['serializedData'] != null)
-          .map((e) => UserCourse.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
-          .toList()
-        : null,
       _credits = (json['credits'] as num?)?.toInt(),
       _time = json['time'],
       _teachers = json['teachers']?.cast<String>();
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'courseCode': _courseCode, 'name': _name, 'users': _users?.map((UserCourse? e) => e?.toJson()).toList(), 'credits': _credits, 'time': _time, 'teachers': _teachers
+    'id': id, 'courseCode': _courseCode, 'name': _name, 'credits': _credits, 'time': _time, 'teachers': _teachers
   };
 
   static final QueryField ID = QueryField(fieldName: "courseData.id");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField NAME = QueryField(fieldName: "name");
-  static final QueryField USERS = QueryField(
-    fieldName: "users",
-    fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (UserCourse).toString()));
   static final QueryField CREDITS = QueryField(fieldName: "credits");
   static final QueryField TIME = QueryField(fieldName: "time");
   static final QueryField TEACHERS = QueryField(fieldName: "teachers");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "CourseData";
     modelSchemaDefinition.pluralName = "CourseData";
-    
-    modelSchemaDefinition.authRules = [
-      AuthRule(
-        authStrategy: AuthStrategy.PUBLIC,
-        operations: [
-          ModelOperation.CREATE,
-          ModelOperation.UPDATE,
-          ModelOperation.DELETE,
-          ModelOperation.READ
-        ])
-    ];
     
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
@@ -195,13 +166,6 @@ class CourseData extends Model {
       key: CourseData.NAME,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.hasMany(
-      key: CourseData.USERS,
-      isRequired: false,
-      ofModelName: (UserCourse).toString(),
-      associatedKey: UserCourse.COURSE
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(

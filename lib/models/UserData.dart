@@ -15,9 +15,7 @@
 
 // ignore_for_file: public_member_api_docs
 
-import 'ModelProvider.dart';
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
 
@@ -29,7 +27,8 @@ class UserData extends Model {
   final String? _name;
   final String? _username;
   final String? _role;
-  final List<UserCourse>? _courses;
+  final int? _actualSemester;
+  final String? _avatar;
 
   @override
   getInstanceType() => classType;
@@ -63,19 +62,24 @@ class UserData extends Model {
     }
   }
   
-  List<UserCourse>? get courses {
-    return _courses;
+  int? get actualSemester {
+    return _actualSemester;
   }
   
-  const UserData._internal({required this.id, required name, required username, required role, courses}): _name = name, _username = username, _role = role, _courses = courses;
+  String? get avatar {
+    return _avatar;
+  }
   
-  factory UserData({String? id, required String name, required String username, required String role, List<UserCourse>? courses}) {
+  const UserData._internal({required this.id, required name, required username, required role, actualSemester, avatar}): _name = name, _username = username, _role = role, _actualSemester = actualSemester, _avatar = avatar;
+  
+  factory UserData({String? id, required String name, required String username, required String role, int? actualSemester, String? avatar}) {
     return UserData._internal(
       id: id == null ? UUID.getUUID() : id,
       name: name,
       username: username,
       role: role,
-      courses: courses != null ? List<UserCourse>.unmodifiable(courses) : courses);
+      actualSemester: actualSemester,
+      avatar: avatar);
   }
   
   bool equals(Object other) {
@@ -90,7 +94,8 @@ class UserData extends Model {
       _name == other._name &&
       _username == other._username &&
       _role == other._role &&
-      DeepCollectionEquality().equals(_courses, other._courses);
+      _actualSemester == other._actualSemester &&
+      _avatar == other._avatar;
   }
   
   @override
@@ -104,19 +109,22 @@ class UserData extends Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("name=" + "$_name" + ", ");
     buffer.write("username=" + "$_username" + ", ");
-    buffer.write("role=" + "$_role");
+    buffer.write("role=" + "$_role" + ", ");
+    buffer.write("actualSemester=" + (_actualSemester != null ? _actualSemester!.toString() : "null") + ", ");
+    buffer.write("avatar=" + "$_avatar");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  UserData copyWith({String? id, String? name, String? username, String? role, List<UserCourse>? courses}) {
+  UserData copyWith({String? id, String? name, String? username, String? role, int? actualSemester, String? avatar}) {
     return UserData(
       id: id ?? this.id,
       name: name ?? this.name,
       username: username ?? this.username,
       role: role ?? this.role,
-      courses: courses ?? this.courses);
+      actualSemester: actualSemester ?? this.actualSemester,
+      avatar: avatar ?? this.avatar);
   }
   
   UserData.fromJson(Map<String, dynamic> json)  
@@ -124,38 +132,22 @@ class UserData extends Model {
       _name = json['name'],
       _username = json['username'],
       _role = json['role'],
-      _courses = json['courses'] is List
-        ? (json['courses'] as List)
-          .where((e) => e?['serializedData'] != null)
-          .map((e) => UserCourse.fromJson(new Map<String, dynamic>.from(e['serializedData'])))
-          .toList()
-        : null;
+      _actualSemester = (json['actualSemester'] as num?)?.toInt(),
+      _avatar = json['avatar'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'name': _name, 'username': _username, 'role': _role, 'courses': _courses?.map((UserCourse? e) => e?.toJson()).toList()
+    'id': id, 'name': _name, 'username': _username, 'role': _role, 'actualSemester': _actualSemester, 'avatar': _avatar
   };
 
   static final QueryField ID = QueryField(fieldName: "userData.id");
   static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField USERNAME = QueryField(fieldName: "username");
   static final QueryField ROLE = QueryField(fieldName: "role");
-  static final QueryField COURSES = QueryField(
-    fieldName: "courses",
-    fieldType: ModelFieldType(ModelFieldTypeEnum.model, ofModelName: (UserCourse).toString()));
+  static final QueryField ACTUALSEMESTER = QueryField(fieldName: "actualSemester");
+  static final QueryField AVATAR = QueryField(fieldName: "avatar");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "UserData";
     modelSchemaDefinition.pluralName = "UserData";
-    
-    modelSchemaDefinition.authRules = [
-      AuthRule(
-        authStrategy: AuthStrategy.PUBLIC,
-        operations: [
-          ModelOperation.CREATE,
-          ModelOperation.UPDATE,
-          ModelOperation.DELETE,
-          ModelOperation.READ
-        ])
-    ];
     
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
@@ -177,11 +169,16 @@ class UserData extends Model {
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.hasMany(
-      key: UserData.COURSES,
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: UserData.ACTUALSEMESTER,
       isRequired: false,
-      ofModelName: (UserCourse).toString(),
-      associatedKey: UserCourse.USER
+      ofType: ModelFieldType(ModelFieldTypeEnum.int)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: UserData.AVATAR,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
   });
 }

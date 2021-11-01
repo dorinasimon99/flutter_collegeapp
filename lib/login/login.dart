@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
+import 'package:flutter_collegeapp/teacher/user_bloc/user_cubit.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
@@ -42,11 +44,11 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: _userNameController,
                   cursorColor: Color(0xFFB4E7B6),
-                  cursorHeight: 20,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 20, color: Colors.black),
+                  cursorHeight: 24,
+                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
                   decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.username,
-                      labelStyle: TextStyle(fontFamily: "Glory", fontWeight: FontWeight.w700, color: Colors.black),
+                      hintText: AppLocalizations.of(context)?.username ?? "Username",
+                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
                         borderSide: BorderSide(color: Color(0xFFB4E7B6))
                       )
@@ -55,11 +57,11 @@ class _LoginPageState extends State<LoginPage> {
                 TextFormField(
                   controller: _passwordController,
                   cursorColor: Color(0xFFB4E7B6),
-                  cursorHeight: 20,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 20, color: Colors.black),
+                  cursorHeight: 24,
+                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
                   decoration: InputDecoration(
-                      labelText: AppLocalizations.of(context)?.password,
-                      labelStyle: TextStyle(fontFamily: "Glory", fontWeight: FontWeight.w700, color: Colors.black),
+                      hintText: AppLocalizations.of(context)?.password ?? "Password",
+                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
                           borderSide: BorderSide(color: Color(0xFFB4E7B6))
                       )
@@ -71,23 +73,23 @@ class _LoginPageState extends State<LoginPage> {
                       onPressed: _signIn,
                       color: Color(0xFFB4E7B6),
                       child: Text(
-                          AppLocalizations.of(context)?.signin.toUpperCase() ?? "",
-                          style: TextStyle(fontFamily: "Glory", fontWeight: FontWeight.w700)
+                          AppLocalizations.of(context)?.signin.toUpperCase() ?? "SIGN IN",
+                          style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24)
                       )
                   ),
                 ),
                 Text(
-                  AppLocalizations.of(context)?.or ?? "",
-                  style: TextStyle(fontFamily: "Glory", color: Color(0xFFC8C8C8)),
+                  AppLocalizations.of(context)?.or ?? "or",
+                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Color(0xFFC8C8C8)),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 20.0),
                   child: MaterialButton(
-                      onPressed: _signUp,
+                      onPressed: () => Navigator.pushNamed(context, 'signUp'),
                       color: Color(0xFFD7FFD9),
                       child: Text(
-                          AppLocalizations.of(context)?.signup.toUpperCase() ?? "",
-                          style: TextStyle(fontFamily: "Glory", fontWeight: FontWeight.w700)
+                          AppLocalizations.of(context)?.signup.toUpperCase() ?? "SIGN UP",
+                          style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24)
                       )
                   ),
                 )
@@ -105,15 +107,27 @@ class _LoginPageState extends State<LoginPage> {
         password: _passwordController.text.trim(),
       );
       if(res.isSignedIn){
+        LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, res.isSignedIn);
+        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_USER_NAME, _userNameController.text.trim());
+        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, _getRole(_userNameController.text.trim()));
         Navigator.pushNamed(context, 'home');
       }
-      LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, res.isSignedIn);
     } on AuthException catch (e) {
       print(e.message);
     }
   }
 
-  void _signUp() async {
-
+  String _getRole(String username) {
+    BlocProvider.of<UsersCubit>(context).getUserByUsername(username);
+    String role = "";
+    BlocListener(
+      bloc: UsersCubit(),
+      listener: (BuildContext context, state) {
+        if(state is GetUserSuccess){
+          role = state.user.role;
+        }
+      },
+    );
+    return role;
   }
 }

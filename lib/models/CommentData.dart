@@ -41,12 +41,20 @@ class CommentData extends Model {
     return _name;
   }
   
-  String? get comment {
-    return _comment;
+  String get comment {
+    try {
+      return _comment!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
   }
   
-  String? get coursename {
-    return _coursename;
+  String get coursename {
+    try {
+      return _coursename!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
   }
   
   String get teachername {
@@ -57,9 +65,9 @@ class CommentData extends Model {
     }
   }
   
-  const CommentData._internal({required this.id, name, comment, coursename, required teachername}): _name = name, _comment = comment, _coursename = coursename, _teachername = teachername;
+  const CommentData._internal({required this.id, name, required comment, required coursename, required teachername}): _name = name, _comment = comment, _coursename = coursename, _teachername = teachername;
   
-  factory CommentData({String? id, String? name, String? comment, String? coursename, required String teachername}) {
+  factory CommentData({String? id, String? name, required String comment, required String coursename, required String teachername}) {
     return CommentData._internal(
       id: id == null ? UUID.getUUID() : id,
       name: name,
@@ -130,17 +138,6 @@ class CommentData extends Model {
     modelSchemaDefinition.name = "CommentData";
     modelSchemaDefinition.pluralName = "CommentData";
     
-    modelSchemaDefinition.authRules = [
-      AuthRule(
-        authStrategy: AuthStrategy.PUBLIC,
-        operations: [
-          ModelOperation.CREATE,
-          ModelOperation.UPDATE,
-          ModelOperation.DELETE,
-          ModelOperation.READ
-        ])
-    ];
-    
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
@@ -151,13 +148,13 @@ class CommentData extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CommentData.COMMENT,
-      isRequired: false,
+      isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CommentData.COURSENAME,
-      isRequired: false,
+      isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     

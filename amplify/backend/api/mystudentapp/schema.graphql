@@ -1,52 +1,65 @@
-type UserData @model @auth(rules: [{allow: public}])  {
-  id: ID!
+type UserData @model {
   name: String!
   username: String!
   role: String!
-  courses: [UserCourse] @connection(name: "UserCourses")
+  courses: [UserCourse]
+  actualSemester: Int
+  avatar: String
 }
 
-type CourseData @model @auth(rules: [{allow: public}]) {
-  id: ID!
+type CourseData @model {
   courseCode: String!
   name: String!
-  users: [UserCourse] @connection(name: "CourseUsers")
+  users: [UserCourse]
   credits: Int!
   time: String!
   teachers: [String]
 }
 
-type UserCourse @model @auth(rules: [{allow: public}]) {
-  id: ID!
-  user: UserData! @connection(name: "UserCourses")
-  course: CourseData! @connection(name: "CourseUsers")
+type UserCourse @model {
+  userID: ID!
+  courseCode: String!
   rating: String
   ratingNum: Int
   semester: Int
   grade: Int
 }
 
-type CommentData @model @auth(rules: [{allow: public}]) {
-  id: ID!
+type CommentData @model {
   name: String
-  comment: String
-  coursename: String
+  comment: String!
+  coursename: String!
   teachername: String!
 }
 
-type TodoData @model @auth(rules: [{allow: public}]) {
-  id: ID!
+type TodoData @model {
   name: String!
   done: Boolean!
-  ownerID: ID!
-  courseID: ID!
+  owner: String!
+  courseCode: String!
   lessonID: ID
+  deadline: String
 }
 
-type LessonData @model @auth(rules: [{allow: public}]) {
-  id: ID!
+type LessonData @model {
   title: String!
+  date: String!
+  time: String!
   ownerID: ID!
-  courseID: ID!
+  courseCode: String!
+  description: String
 }
- 
+
+type QuizData @model {
+  lessonID: ID!
+  title: String!
+  questions: [String]!
+  answers: [String]!
+}
+
+type CardData @model {
+  courseCode: String!
+  courseName: String!  
+  questions: [String]!
+  answers: [String]!
+}

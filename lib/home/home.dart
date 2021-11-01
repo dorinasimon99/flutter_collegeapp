@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/app.dart';
-import 'package:flutter_collegeapp/courses/CoursesCubit.dart';
-import 'package:flutter_collegeapp/home/today_courses_list.dart';
-import 'package:flutter_collegeapp/menu/menu.dart';
+import 'package:flutter_collegeapp/common/common_widgets.dart';
+import 'package:flutter_collegeapp/home/today_lessons_list.dart';
+import 'package:flutter_collegeapp/lesson/lesson_cubit.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 class HomePage extends StatefulWidget {
 
@@ -23,18 +24,10 @@ class _HomePageState extends State<HomePage> {
 }
 
 Widget todayCoursesView(BuildContext context, List<CourseData> _todayCourses) {
+  String date = DateFormat('yyyy.M.d.').format(DateTime.now());
+  BlocProvider.of<LessonsCubit>(context)..getTodayLessons(date);
   return Scaffold(
-    appBar: AppBar(
-      leading: IconButton(
-        onPressed: () => Navigator.pushNamed(context, 'menu'),
-        icon: Image.asset('assets/hamburger.png'),
-        iconSize: 120,
-      ),
-      toolbarHeight: 100.0,
-      automaticallyImplyLeading: true,
-      backgroundColor: Colors.transparent,
-      shadowColor: Colors.transparent,
-    ),
+    appBar: header(context),
     body: Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -46,21 +39,20 @@ Widget todayCoursesView(BuildContext context, List<CourseData> _todayCourses) {
               style: TextStyle(
                   fontFamily: 'Glory-Semi', fontSize: 40, color: Colors.black),
             ),
-            BlocBuilder<CoursesCubit, CoursesState>(
-              builder: (context, state) {
-                if(state is ListCoursesSuccess) {
-                  return  TodayCoursesList(
-                      courses: state.courses
-                        ..sort((a, b) {
-                          return a.time.compareTo(b.time);
-                        }));
-                } else if (state is ListCoursesFailure) {
-                  return Center(child: Text(state.exception.toString()));
-                } else {
-                  return LoadingView();
-                }
-              },
-            ),
+            BlocBuilder<LessonsCubit, LessonsState>(
+                builder: (context, state) {
+                  if(state is ListLessonsSuccess) {
+                    return  TodayLessonsList(
+                        lessons: state.lessons..sort((a, b) {
+                            return a.time.compareTo(b.time);
+                          }));
+                  } else if (state is ListLessonsFailure) {
+                    return Center(child: Text(state.exception.toString()));
+                  } else {
+                    return LoadingView();
+                  }
+                },
+              ),
           ],
         ),
       ),

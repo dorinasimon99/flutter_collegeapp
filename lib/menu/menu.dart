@@ -1,9 +1,8 @@
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
-import 'package:flutter_collegeapp/models/CourseData.dart';
-import 'package:flutter_collegeapp/timetable/timetable.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class MenuPage extends StatefulWidget {
@@ -18,18 +17,7 @@ class _MenuPageState extends State<MenuPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-            icon: Image.asset('assets/back.png'),
-            iconSize: 120,
-            onPressed: (){
-              Navigator.of(context).pop();
-            },
-        ),
-        toolbarHeight: 100.0,
-        backgroundColor: Colors.transparent,
-        shadowColor: Colors.transparent,
-      ),
+      appBar: header(context, isMenu: false),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(10.0, 10.0, 10.0, 0),
@@ -59,7 +47,10 @@ class _MenuPageState extends State<MenuPage> {
                       ),
                       Row(
                         children: [
-                          Image.asset('assets/courses.png', width: 45),
+                          IconButton(
+                              icon: Image.asset('assets/courses.png'),
+                              iconSize: 45,
+                              onPressed: () => Navigator.pushNamed(context, 'courses')),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 20),
                             child: Text(
@@ -71,7 +62,10 @@ class _MenuPageState extends State<MenuPage> {
                       ),
                       Row(
                         children: [
-                          Image.asset('assets/stats.png', width: 45),
+                          IconButton(
+                              icon: Image.asset('assets/stats.png'),
+                              iconSize: 45,
+                              onPressed: (){}),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 20),
                             child: Text(
@@ -83,7 +77,10 @@ class _MenuPageState extends State<MenuPage> {
                       ),
                       Row(
                         children: [
-                          Image.asset('assets/cards.png', width: 45),
+                          IconButton(
+                              icon: Image.asset('assets/cards.png'),
+                              iconSize: 45,
+                              onPressed: () => Navigator.pushNamed(context, 'cards')),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 20),
                             child: Text(
@@ -106,10 +103,9 @@ class _MenuPageState extends State<MenuPage> {
                           icon: Image.asset('assets/logout.png'),
                           iconSize: 45,
                           onPressed: _signOut,
-                          padding: EdgeInsets.all(0),
                         ),
                         Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 8),
+                          padding: const EdgeInsets.symmetric(vertical: 30.0, horizontal: 8.0),
                           child: Text(
                             AppLocalizations.of(context)?.logout ?? 'Logout',
                             style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 30, color: Colors.black),
@@ -129,9 +125,9 @@ class _MenuPageState extends State<MenuPage> {
 
   void _signOut() async{
     try {
-      //await Amplify.Auth.signOut();
-      Navigator.popUntil(context, ModalRoute.withName('root'));
+      await Amplify.Auth.signOut();
       LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, false);
+      Navigator.popUntil(context, ModalRoute.withName('root'));
     } on AuthException catch (e) {
       print(e.message);
     }

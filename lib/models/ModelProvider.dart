@@ -16,31 +16,39 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
+import 'CardData.dart';
 import 'CommentData.dart';
 import 'CourseData.dart';
 import 'LessonData.dart';
+import 'QuizData.dart';
 import 'TodoData.dart';
 import 'UserCourse.dart';
 import 'UserData.dart';
 
+export 'CardData.dart';
 export 'CommentData.dart';
 export 'CourseData.dart';
 export 'LessonData.dart';
+export 'QuizData.dart';
 export 'TodoData.dart';
 export 'UserCourse.dart';
 export 'UserData.dart';
 
 class ModelProvider implements ModelProviderInterface {
   @override
-  String version = "996d2ada215e41ad4453a22f1f916ec0";
+  String version = "b4fe6cd5bcd61ccb674bda49508b2af8";
   @override
-  List<ModelSchema> modelSchemas = [CommentData.schema, CourseData.schema, LessonData.schema, TodoData.schema, UserCourse.schema, UserData.schema];
+  List<ModelSchema> modelSchemas = [CardData.schema, CommentData.schema, CourseData.schema, LessonData.schema, QuizData.schema, TodoData.schema, UserCourse.schema, UserData.schema];
   static final ModelProvider _instance = ModelProvider();
 
   static ModelProvider get instance => _instance;
   
   ModelType getModelTypeByModelName(String modelName) {
     switch(modelName) {
+    case "CardData": {
+    return CardData.classType;
+    }
+    break;
     case "CommentData": {
     return CommentData.classType;
     }
@@ -51,6 +59,10 @@ class ModelProvider implements ModelProviderInterface {
     break;
     case "LessonData": {
     return LessonData.classType;
+    }
+    break;
+    case "QuizData": {
+    return QuizData.classType;
     }
     break;
     case "TodoData": {
