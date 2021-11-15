@@ -51,5 +51,12 @@
       }
     }
   },
-  "function": {}
+  "function": {},
+  "storage": {
+    "s3Avatars": {
+      "service": "S3",
+      "providerPlugin": "awscloudformation",
+      "dependsOn": []
+    }
+  }
 }

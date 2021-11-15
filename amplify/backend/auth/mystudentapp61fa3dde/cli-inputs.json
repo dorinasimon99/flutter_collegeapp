@@ -1,14 +1,16 @@
 {
+  "version": "1",
+  "cognitoConfig": {
     "identityPoolName": "mystudentapp40be7ab1_identitypool_40be7ab1",
     "allowUnauthenticatedIdentities": false,
     "resourceNameTruncated": "mystud61fa3dde",
     "userPoolName": "mystudentapp61fa3dde_userpool_61fa3dde",
     "autoVerifiedAttributes": [
-        "email"
+      "email"
     ],
     "mfaConfiguration": "OFF",
     "mfaTypes": [
-        "SMS Text Message"
+      "SMS Text Message"
     ],
     "smsAuthenticationMessage": "Your authentication code is {####}",
     "smsVerificationMessage": "Your verification code is {####}",
@@ -18,51 +20,53 @@
     "passwordPolicyMinLength": 8,
     "passwordPolicyCharacters": [],
     "requiredAttributes": [
-        "email"
+      "email"
     ],
     "aliasAttributes": [],
     "userpoolClientGenerateSecret": false,
     "userpoolClientRefreshTokenValidity": 30,
     "userpoolClientWriteAttributes": [
-        "email"
+      "email"
     ],
     "userpoolClientReadAttributes": [
-        "email"
+      "email"
     ],
     "userpoolClientLambdaRole": "mystud61fa3dde_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "61fa3dde",
-    "resourceName": "mystudentapp61fa3dde",
     "authSelections": "identityPoolAndUserPool",
-    "authRoleArn": {
-        "Fn::GetAtt": [
-            "AuthRole",
-            "Arn"
-        ]
-    },
-    "unauthRoleArn": {
-        "Fn::GetAtt": [
-            "UnauthRole",
-            "Arn"
-        ]
-    },
-    "useDefault": "manual",
-    "hostedUI": false,
-    "triggers": "{}",
-    "userPoolGroupList": [
-        "users"
-    ],
+    "resourceName": "mystudentapp61fa3dde",
     "serviceName": "Cognito",
-    "usernameCaseSensitive": false,
-    "parentStack": {
-        "Ref": "AWS::StackId"
-    },
-    "permissions": [],
-    "dependsOn": [],
+    "useDefault": "manual",
+    "sharedId": "61fa3dde",
+    "userPoolGroupList": [
+      "users"
+    ],
     "userPoolGroups": false,
+    "usernameCaseSensitive": false,
     "adminQueries": false,
     "adminQueryGroup": "users",
-    "breakCircularDependency": false,
+    "hostedUI": false,
+    "thirdPartyAuth": false,
     "authProviders": [],
-    "thirdPartyAuth": false
+    "triggers": {},
+    "authRoleArn": {
+      "Fn::GetAtt": [
+        "AuthRole",
+        "Arn"
+      ]
+    },
+    "unauthRoleArn": {
+      "Fn::GetAtt": [
+        "UnauthRole",
+        "Arn"
+      ]
+    },
+    "breakCircularDependency": false,
+    "useEnabledMfas": false,
+    "dependsOn": [],
+    "parentStack": {
+      "Ref": "AWS::StackId"
+    },
+    "permissions": []
+  }
 }

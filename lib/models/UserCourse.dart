@@ -159,9 +159,9 @@ class UserCourse extends Model {
       _name = json['name'],
       _courseCode = json['courseCode'],
       _rating = json['rating'],
-      _ratingNum = (json['ratingNum'] as num?)?.toInt(),
-      _semester = (json['semester'] as num?)?.toInt(),
-      _grade = (json['grade'] as num?)?.toInt(),
+      _ratingNum = json['ratingNum'],
+      _semester = json['semester'],
+      _grade = json['grade'],
       _username = json['username'],
       _visible = json['visible'];
   

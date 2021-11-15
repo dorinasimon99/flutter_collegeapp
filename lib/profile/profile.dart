@@ -8,6 +8,7 @@ import 'package:flutter_collegeapp/bloc/users/user_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/storage_repository.dart';
 import 'package:flutter_collegeapp/models/UserData.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -21,9 +22,10 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   UserData? user;
-  var backgroundImage;
+  ImageProvider backgroundImage = AssetImage("assets/avatar.png");
   final ImagePicker _picker = ImagePicker();
   String? _selectedImage;
+  String? imageKey;
   bool _editing = false;
   var _nameController = TextEditingController();
   var _semesterController = TextEditingController();
@@ -123,8 +125,13 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _selectImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    var key;
+    if(pickedFile != null){
+      key = await StorageRepository().uploadFile(File(pickedFile.path));
+    }
     setState(() {
       _selectedImage = pickedFile?.path;
+      imageKey = key;
     });
   }
 
@@ -142,9 +149,10 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
-  void _saveUser(){
+  void _saveUser() async {
+    var imageUrl = await StorageRepository().getUrlForFile(imageKey);
     var newUser = user?.copyWith(
-      avatar: _selectedImage,
+      avatar: imageUrl,
       name: _nameController.text.trim(),
       actualSemester: int.parse(_semesterController.text.trim())
     );
@@ -182,7 +190,7 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircleAvatar(
-                backgroundImage: backgroundImage,
+                backgroundImage: imageKey != null ? NetworkImage(imageKey ?? '') : _selectedImage != null ? FileImage(File(_selectedImage!)) : backgroundImage,
                 radius: 70,
                 child: Stack(children: [
                   Align(
@@ -197,7 +205,9 @@ class _ProfilePageState extends State<ProfilePage> {
                               size: 30, color: Colors.black),
                           onPressed: () {
                             setState(() {
-                              _editing = true;
+                              _editing = !_editing;
+                              _nameController.text = user?.name ?? '';
+                              _semesterController.text = user?.actualSemester.toString() ?? '';
                             });
                             _selectImage();
                           }),
