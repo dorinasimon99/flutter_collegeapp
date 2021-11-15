@@ -29,10 +29,10 @@ class UserCoursesRepository {
 
   Future<UserCourse?> getUserCourseByNameAndCourseCode(String name, String courseCode) async {
     try{
-      var item = (await Amplify.DataStore.query(UserCourse.classType,
+      var items = (await Amplify.DataStore.query(UserCourse.classType,
       where: UserCourse.NAME.eq(name).and(UserCourse.COURSECODE.eq(courseCode))
-      .and(UserCourse.VISIBLE.eq(null).or(UserCourse.VISIBLE.eq(true).or(UserCourse.VISIBLE.eq('true'))))))[0];
-      return item;
+      .and(UserCourse.VISIBLE.eq(null).or(UserCourse.VISIBLE.eq(true).or(UserCourse.VISIBLE.eq('true'))))));
+      return items.isNotEmpty ? items[0] : null;
     } catch (e) {
       throw e;
     }

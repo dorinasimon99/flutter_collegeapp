@@ -88,5 +88,10 @@
   "existing_courseCode": "Ez a kurzuskód már létezik!",
   "no_results": "Nincs találat.",
   "no_todo_today": "Mára nincs feladat.",
-  "comment": "Hozzászólás"
+  "comment": "Hozzászólás",
+  "monday": "Hétfő",
+  "tuesday": "Kedd",
+  "wednesday": "Szerda",
+  "thursday": "Csütörtök",
+  "friday": "Péntek"
 }

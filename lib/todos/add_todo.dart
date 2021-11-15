@@ -158,7 +158,7 @@ class _AddTodoPageState extends State<AddTodoPage> {
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime(DateTime.now().year),
-        lastDate: DateTime(DateTime.now().year+5)
+        lastDate: DateTime(DateTime.now().year+5),
     );
     if(picked != null && picked != DateTime.now()){
       setState(() {

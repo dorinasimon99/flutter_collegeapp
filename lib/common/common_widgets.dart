@@ -11,11 +11,13 @@ AppBar Header(BuildContext context, {bool isMenu = true}){
         onPressed: () => Navigator.pushNamed(context, 'menu'),
         icon: Image.asset('assets/hamburger.png'),
         iconSize: 120,
+        splashRadius: 36,
       )
     : IconButton(
       icon: Image.asset('assets/back.png'),
       iconSize: 120,
       onPressed: () => Navigator.pop(context),
+      splashRadius: 36,
     ),
     toolbarHeight: 80.0,
     automaticallyImplyLeading: true,
@@ -208,7 +210,7 @@ void showSnackBar(BuildContext context, String text, {Function()? onActionPresse
     backgroundColor: color ?? Resources.customColors.snackBarGreen,
     action: SnackBarAction(
       label: onActionPressed != null ? AppLocalizations.of(context)?.ok ?? 'OK' : '',
-      textColor: Colors.white,
+      textColor: Resources.customColors.snackBarText,
       onPressed: (){
         if(onActionPressed != null){
           onActionPressed();

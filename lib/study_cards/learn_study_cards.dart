@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/bloc/cards/card_cubit.dart';
+import 'package:flutter_collegeapp/bloc/lessons/lesson_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/models/CardData.dart';
@@ -51,7 +52,18 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                     style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
                   ),
                 ),
-                IconButton(
+                BlocListener<CardsCubit, CardsState>(
+                  listener: (context, state) {
+                    if(state is UpdateCardSuccess){
+                      setState(() {
+                        _refresh = true;
+                        card = state.card;
+                      });
+                    } else if(state is UpdateCardFailure){
+                      showErrorAlert(state.exception.toString(), context);
+                    }
+                  },
+                  child: IconButton(
                     onPressed: (){
                       setState(() {
                         _favorite = !_favorite!;
@@ -60,6 +72,7 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                     },
                     icon: Icon(_favorite! ? Icons.favorite : Icons.favorite_border, size: 40, color: Resources.customColors.cardGreen),
                   ),
+                ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                   child: IconButton(
@@ -126,7 +139,7 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
 
   void _updateFavorites() async {
     CardData? saveCard = card?.copyWith(isFavorite: _favorite);
-    BlocProvider.of<CardsCubit>(context).saveCard(saveCard);
+    BlocProvider.of<CardsCubit>(context).updateCard(saveCard);
   }
 }
 

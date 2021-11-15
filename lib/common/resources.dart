@@ -18,6 +18,7 @@ class CustomColors {
   Color snackBarGreen = Color(0xFFBED7BF);
   Color alertRed = Color(0xFFFF5252);
   Color editCardBackground = Color(0xC6F1D463);
+  Color snackBarText = Color(0xFF9A3AFF);
 }
 
 class CustomTextStyles{

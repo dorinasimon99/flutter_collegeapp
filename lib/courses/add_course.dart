@@ -154,8 +154,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
-                          }
-                          return null;
+                          } else return null;
                         },
                       ),
                     ),
@@ -183,10 +182,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
                         validator: (value) {
                           if (value == null || value.isEmpty) {
                             return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
-                          } else if(_allCourses.isNotEmpty && _allCourses.any((element) => element.courseCode == value)){
+                          } else if(selectedCourse == null && _allCourses.isNotEmpty && _allCourses.any((element) => element.courseCode == value)){
                             return AppLocalizations.of(context)?.existing_courseCode ?? 'This course code already exist!';
-                          }
-                          return null;
+                          } else return null;
                         },
                       ),
                     ),
@@ -202,11 +200,11 @@ class _AddCoursePageState extends State<AddCoursePage> {
                           }) : (){},
                           textMapper: (numberText) {
                             switch(numberText){
-                              case "0": return Days.instance.days[0];
-                              case "1": return Days.instance.days[1];
-                              case "2": return Days.instance.days[2];
-                              case "3": return Days.instance.days[3];
-                              case "4": return Days.instance.days[4];
+                              case "0": return AppLocalizations.of(context)?.monday ?? Days.instance.days[0];
+                              case "1": return AppLocalizations.of(context)?.tuesday ?? Days.instance.days[1];
+                              case "2": return AppLocalizations.of(context)?.wednesday ?? Days.instance.days[2];
+                              case "3": return AppLocalizations.of(context)?.thursday ?? Days.instance.days[3];
+                              case "4": return AppLocalizations.of(context)?.friday ?? Days.instance.days[4];
                               default: return "";
                             }
                           },

@@ -28,6 +28,12 @@ class _AddCardPageState extends State<AddCardPage> {
   CourseData? _firstValue;
   bool _delete = false;
 
+  @override
+  void initState(){
+    super.initState();
+    _getUser();
+  }
+
   void _setEditing(CardData _editable){
     _questions.addAll(_editable.questions);
     _answers.addAll(_editable.answers);
@@ -51,7 +57,6 @@ class _AddCardPageState extends State<AddCardPage> {
 
   @override
   Widget build(BuildContext context) {
-    _getUser();
     editCard = ModalRoute.of(context)!.settings.arguments as CardData?;
     if(!_delete && !_editing && editCard != null){
       _setEditing(editCard!);
@@ -101,7 +106,7 @@ class _AddCardPageState extends State<AddCardPage> {
                         },
                         child: IconButton(
                           onPressed: (){
-                            _save();
+                            showSnackBar(context, AppLocalizations.of(context)?.card_created ?? 'Card created', onActionPressed: () => Navigator.pop(context, null));//_save();
                           },
                           icon: Icon(Icons.check, size: 35, color: Colors.black),
                         ),
@@ -129,11 +134,11 @@ class _AddCardPageState extends State<AddCardPage> {
                           child: BlocBuilder<CoursesCubit, CoursesState>(
                             builder: (context, state) {
                               if (state is ListUsersCoursesSuccess) {
-                                if (editCard != null) {
+                                if (editCard != null && _selectedCourse == null) {
                                   _firstValue = state.courses.firstWhere((element) => element.courseCode == editCard!.courseCode);
                                 }
                                 return DropdownButton<CourseData>(
-                                  value: _firstValue ?? _selectedCourse,
+                                  value: _selectedCourse ?? _firstValue,
                                     items: state.courses.map<DropdownMenuItem<CourseData>>(
                                       (CourseData value) {
                                       return DropdownMenuItem<CourseData>(

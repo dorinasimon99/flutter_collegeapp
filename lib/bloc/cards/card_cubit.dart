@@ -111,12 +111,16 @@ class CardsCubit extends Cubit<CardsState> {
     }
   }
 
-  void updateCard(CardData card) async {
-    try{
-      await _cardsRepo.updateCard(card);
-      emit(UpdateCardSuccess(card: card));
-    } catch (e){
-      emit(UpdateCardFailure(exception: e));
+  void updateCard(CardData? card) async {
+    if(card == null){
+      emit(UpdateCardFailure(exception: Exception("Card is null")));
+    } else {
+      try{
+        await _cardsRepo.updateCard(card);
+        emit(UpdateCardSuccess(card: card));
+      } catch (e){
+        emit(UpdateCardFailure(exception: e));
+      }
     }
   }
 }
