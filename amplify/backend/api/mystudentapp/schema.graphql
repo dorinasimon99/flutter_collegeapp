@@ -1,0 +1,77 @@
+type UserData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  username: String!
+  role: String!
+  actualSemester: Int!
+  avatar: String
+  name: String!
+}
+
+type CourseData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  credits: Int!
+  time: String!
+  teachers: [String]
+  courseCode: String!
+}
+
+type UserCourse @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  name: String!
+  courseCode: String!
+  rating: String
+  ratingNum: Int
+  semester: Int
+  grade: Int
+  username: String!
+  visible: Boolean
+}
+
+type CommentData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  courseCode: String!
+  teachername: String!
+  name: String
+  comment: String!
+}
+
+type TodoData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  done: Boolean!
+  owner: String!
+  courseCode: String!
+  lessonID: ID
+  deadline: String
+  name: String!
+}
+
+type LessonData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  date: String!
+  time: String!
+  owner: String!
+  courseCode: String!
+  description: String
+  title: String!
+}
+
+type QuizData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  title: String!
+  lessonID: ID!
+  link: String!
+  visible: Boolean!
+  description: String
+}
+
+type CardData @model @auth(rules: [{allow: public}]) {
+  id: ID!
+  title: String
+  questions: [String]!
+  answers: [String]!
+  courseCode: String!
+  courseName: String!
+  isFavorite: Boolean!
+}
+ 

@@ -1,113 +1,188 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_collegeapp/bloc/usercourses/usercourses_cubit.dart';
+import 'package:flutter_collegeapp/home/today_lessons_list.dart';
+import 'package:flutter_collegeapp/lesson/add_lesson.dart';
+import 'package:flutter_collegeapp/menu/menu.dart';
+import 'package:flutter_collegeapp/profile/profile.dart';
+import 'package:flutter_collegeapp/quiz/add_quiz.dart';
+import 'package:flutter_collegeapp/quiz/quizzes.dart';
+import 'package:flutter_collegeapp/sign_up/sign_up.dart';
+import 'package:flutter_collegeapp/statistics/statistics.dart';
+import 'package:flutter_collegeapp/study_cards/add_card.dart';
+import 'package:flutter_collegeapp/bloc/cards/card_cubit.dart';
+import 'package:flutter_collegeapp/study_cards/learn_study_cards.dart';
+import 'package:flutter_collegeapp/study_cards/study_cards.dart';
+import 'package:flutter_collegeapp/teacher/add_rating.dart';
+import 'package:flutter_collegeapp/bloc/comments/comment_cubit.dart';
+import 'package:flutter_collegeapp/bloc/ratings/ratings_cubit.dart';
+import 'package:flutter_collegeapp/teacher/teacher_ratings.dart';
+import 'package:flutter_collegeapp/bloc/users/user_cubit.dart';
+import 'package:flutter_collegeapp/timetable/timetable.dart';
+import 'package:flutter_collegeapp/todos/add_todo.dart';
+import 'app.dart';
+import 'courses/add_course.dart';
+import 'courses/course_details.dart';
+import 'courses/courses.dart';
+import 'bloc/courses/courses_cubit.dart';
+import 'bloc/teachers/teachers_cubit.dart';
+import 'bloc/todos/todos_cubit.dart';
+import 'home/home.dart';
+import 'lesson/lesson.dart';
+import 'bloc/lessons/lesson_cubit.dart';
+import 'bloc/quizzes/quiz_cubit.dart';
 
 void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // Try running your application with "flutter run". You'll see the
-        // application has a blue toolbar. Then, without quitting the app, try
-        // changing the primarySwatch below to Colors.green and then invoke
-        // "hot reload" (press "r" in the console where you ran "flutter run",
-        // or simply save your changes to "hot reload" in a Flutter IDE).
-        // Notice that the counter didn't reset back to zero; the application
-        // is not restarted.
-        primarySwatch: Colors.blue,
-      ),
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  MyHomePage({Key? key, required this.title}) : super(key: key);
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  _MyHomePageState createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Invoke "debug painting" (press "p" in the console, choose the
-          // "Toggle Debug Paint" action from the Flutter Inspector in Android
-          // Studio, or the "Toggle Debug Paint" command in Visual Studio Code)
-          // to see the wireframe for each widget.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Text(
-              'You have pushed the button this many times:',
+  runApp(
+      MultiBlocProvider(
+          providers: [
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: HomePage(),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: CoursesPage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: AddCoursePage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: TeacherRatingPage(),
+            ),
+            BlocProvider(
+              create: (context) => TeachersCubit(),
+              child: TeachersList(),
+            ),
+            BlocProvider(
+              create: (context) => TodosCubit(),
+              child: CourseDetailsPage(),
+            ),
+            BlocProvider(
+              create: (context) => TodosCubit(),
+              child: TodoItem(todo: null),
+            ),
+            BlocProvider(
+              create: (context) => TodosCubit(),
+              child: AddTodoPage(),
+            ),
+            BlocProvider(
+              create: (context) => QuizzesCubit(),
+              child: LessonPage(),
+            ),
+            BlocProvider(
+              create: (context) => CardsCubit(),
+              child: StudyCardsPage(),
+            ),
+            BlocProvider(
+              create: (context) => RatingsCubit(),
+              child: RatingsView(courseName: '', teacherName: '', courseCode: ''),
+            ),
+            BlocProvider(
+              create: (context) => RatingsCubit(),
+              child: AddRatingPage(),
+            ),
+            BlocProvider(
+              create: (context) => CommentsCubit(),
+              child: RatingsView(courseName: '', teacherName: '', courseCode: ''),
+            ),
+            BlocProvider(
+              create: (context) => CommentsCubit(),
+              child: AddRatingPage(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: HomePage(),
+            ),
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: TimetablePage(),
+            ),
+            BlocProvider(
+              create: (context) => TodosCubit(),
+              child: TimetablePage(),
+            ),
+            BlocProvider(
+              create: (context) => QuizzesCubit(),
+              child: AddQuizPage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: AddCardPage(),
+            ),
+            BlocProvider(
+              create: (context) => CardsCubit(),
+              child: AddCardPage(),
+            ),
+            BlocProvider(
+              create: (context) => UserCoursesCubit(),
+              child: StatisticsPage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: StatisticsPage(),
+            ),
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: LessonsList(),
+            ),
+            BlocProvider(
+              create: (context) => TodosCubit(),
+              child: LessonItem(),
+            ),
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: AddLessonPage(),
+            ),
+            BlocProvider(
+              create: (context) => CardsCubit(),
+              child: LearnStudyCardsPage(),
+            ),
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: CourseDetailsPage(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: SignUpPage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: CourseDetailsPage(),
+            ),
+            BlocProvider(
+              create: (context) => TeachersCubit(),
+              child: CourseDetailsPage(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: MenuPage(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: ProfilePage(),
+            ),
+            BlocProvider(
+              create: (context) => QuizzesCubit(),
+              child: QuizzesPage(),
+            ),
+            BlocProvider(
+              create: (context) => LessonsCubit(),
+              child: QuizzesPage(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: DeleteCourseDialog(),
+            ),
+            BlocProvider(
+              create: (context) => CoursesCubit(),
+              child: TeacherCoursesTabView(),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
-    );
-  }
+          child: App(),
+
+  ));
 }
