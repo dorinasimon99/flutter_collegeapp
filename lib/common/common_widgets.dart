@@ -24,14 +24,25 @@ AppBar Header(BuildContext context, {bool isMenu = true}){
   );
 }
 
-IconButton HomeButton(BuildContext context){
-  return IconButton(
-    onPressed: () {
-      Navigator.popUntil(context, (route) => false);
-      Navigator.pushNamed(context, 'root');
-    },
-    icon: Image.asset("assets/home.png"),
-    iconSize: 45,
+Widget HomeButton(BuildContext context){
+  return Container(
+    height: 80,
+    width: MediaQuery.of(context).size.width,
+    child: Stack(
+      alignment: Alignment.bottomCenter,
+      children: [
+        Positioned(
+            bottom: 20,
+            child: IconButton(
+              onPressed: () {
+                Navigator.popUntil(context, (route) => false);
+                Navigator.pushNamed(context, 'root');
+              },
+              icon: Image.asset("assets/home.png"),
+              iconSize: 45,
+            ))
+      ],
+    ),
   );
 }
 

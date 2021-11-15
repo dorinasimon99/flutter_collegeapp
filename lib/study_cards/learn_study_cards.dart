@@ -48,7 +48,7 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                 Flexible(
                   child: Text(
                     "${card!.title != null && card!.title!.isNotEmpty ? card!.title! : card!.courseName} ${AppLocalizations.of(context)?.cards ?? 'cards'}" ,
-                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                   ),
                 ),
                 IconButton(

@@ -65,18 +65,7 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     return Scaffold(
         appBar: Header(context, isMenu: false),
         resizeToAvoidBottomInset: false,
-        bottomNavigationBar: Container(
-          height: 60,
-          width: MediaQuery.of(context).size.width,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Positioned(
-                  bottom: 0,
-                  child: HomeButton(context))
-            ],
-          ),
-        ),
+        bottomNavigationBar: HomeButton(context),
         body: RefreshIndicator(
           onRefresh: (){
             return Future.delayed(

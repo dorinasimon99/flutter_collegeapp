@@ -29,18 +29,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: Header(context),
-      bottomNavigationBar: Container(
-        height: 60,
-        width: MediaQuery.of(context).size.width,
-        child: Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            Positioned(
-                bottom: 0,
-                child: HomeButton(context))
-          ],
-        ),
-      ),
+      bottomNavigationBar: HomeButton(context),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),

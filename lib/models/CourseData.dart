@@ -135,7 +135,7 @@ class CourseData extends Model {
   CourseData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
       _name = json['name'],
-      _credits = (json['credits'] as num?)?.toInt(),
+      _credits = json['credits'],
       _time = json['time'],
       _teachers = json['teachers']?.cast<String>(),
       _courseCode = json['courseCode'];

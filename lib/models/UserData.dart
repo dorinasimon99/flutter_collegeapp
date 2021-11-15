@@ -135,7 +135,7 @@ class UserData extends Model {
     : id = json['id'],
       _username = json['username'],
       _role = json['role'],
-      _actualSemester = (json['actualSemester'] as num?)?.toInt(),
+      _actualSemester = json['actualSemester'],
       _avatar = json['avatar'],
       _name = json['name'];
   

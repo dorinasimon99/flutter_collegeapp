@@ -57,18 +57,7 @@ class _TimetablePageState extends State<TimetablePage> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: Header(context, isMenu: false),
-        bottomNavigationBar: Container(
-          height: 60,
-          width: MediaQuery.of(context).size.width,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
-            children: [
-              Positioned(
-                  bottom: 0,
-                  child: HomeButton(context))
-            ],
-          ),
-        ),
+        bottomNavigationBar: HomeButton(context),
         body: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: Column(children: [
