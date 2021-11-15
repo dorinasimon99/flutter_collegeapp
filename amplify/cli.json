@@ -15,7 +15,7 @@
         },
         "codegen": {
             "useappsyncmodelgenplugin": true,
-            "enableDartNullSafety" : true
+            "enableDartNullSafety": true
         },
         "appsync": {
             "generategraphqlpermissions": true

@@ -24,10 +24,10 @@ import 'package:flutter/foundation.dart';
 class CommentData extends Model {
   static const classType = const _CommentDataModelType();
   final String id;
+  final String? _courseCode;
+  final String? _teachername;
   final String? _name;
   final String? _comment;
-  final String? _coursename;
-  final String? _teachername;
 
   @override
   getInstanceType() => classType;
@@ -35,6 +35,22 @@ class CommentData extends Model {
   @override
   String getId() {
     return id;
+  }
+  
+  String get courseCode {
+    try {
+      return _courseCode!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
+  
+  String get teachername {
+    try {
+      return _teachername!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
   }
   
   String? get name {
@@ -49,31 +65,15 @@ class CommentData extends Model {
     }
   }
   
-  String get coursename {
-    try {
-      return _coursename!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
-  }
+  const CommentData._internal({required this.id, required courseCode, required teachername, name, required comment}): _courseCode = courseCode, _teachername = teachername, _name = name, _comment = comment;
   
-  String get teachername {
-    try {
-      return _teachername!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
-  }
-  
-  const CommentData._internal({required this.id, name, required comment, required coursename, required teachername}): _name = name, _comment = comment, _coursename = coursename, _teachername = teachername;
-  
-  factory CommentData({String? id, String? name, required String comment, required String coursename, required String teachername}) {
+  factory CommentData({String? id, required String courseCode, required String teachername, String? name, required String comment}) {
     return CommentData._internal(
       id: id == null ? UUID.getUUID() : id,
+      courseCode: courseCode,
+      teachername: teachername,
       name: name,
-      comment: comment,
-      coursename: coursename,
-      teachername: teachername);
+      comment: comment);
   }
   
   bool equals(Object other) {
@@ -85,10 +85,10 @@ class CommentData extends Model {
     if (identical(other, this)) return true;
     return other is CommentData &&
       id == other.id &&
+      _courseCode == other._courseCode &&
+      _teachername == other._teachername &&
       _name == other._name &&
-      _comment == other._comment &&
-      _coursename == other._coursename &&
-      _teachername == other._teachername;
+      _comment == other._comment;
   }
   
   @override
@@ -100,45 +100,68 @@ class CommentData extends Model {
     
     buffer.write("CommentData {");
     buffer.write("id=" + "$id" + ", ");
+    buffer.write("courseCode=" + "$_courseCode" + ", ");
+    buffer.write("teachername=" + "$_teachername" + ", ");
     buffer.write("name=" + "$_name" + ", ");
-    buffer.write("comment=" + "$_comment" + ", ");
-    buffer.write("coursename=" + "$_coursename" + ", ");
-    buffer.write("teachername=" + "$_teachername");
+    buffer.write("comment=" + "$_comment");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  CommentData copyWith({String? id, String? name, String? comment, String? coursename, String? teachername}) {
+  CommentData copyWith({String? id, String? courseCode, String? teachername, String? name, String? comment}) {
     return CommentData(
       id: id ?? this.id,
+      courseCode: courseCode ?? this.courseCode,
+      teachername: teachername ?? this.teachername,
       name: name ?? this.name,
-      comment: comment ?? this.comment,
-      coursename: coursename ?? this.coursename,
-      teachername: teachername ?? this.teachername);
+      comment: comment ?? this.comment);
   }
   
   CommentData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
+      _courseCode = json['courseCode'],
+      _teachername = json['teachername'],
       _name = json['name'],
-      _comment = json['comment'],
-      _coursename = json['coursename'],
-      _teachername = json['teachername'];
+      _comment = json['comment'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'name': _name, 'comment': _comment, 'coursename': _coursename, 'teachername': _teachername
+    'id': id, 'courseCode': _courseCode, 'teachername': _teachername, 'name': _name, 'comment': _comment
   };
 
   static final QueryField ID = QueryField(fieldName: "commentData.id");
+  static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
+  static final QueryField TEACHERNAME = QueryField(fieldName: "teachername");
   static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField COMMENT = QueryField(fieldName: "comment");
-  static final QueryField COURSENAME = QueryField(fieldName: "coursename");
-  static final QueryField TEACHERNAME = QueryField(fieldName: "teachername");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "CommentData";
     modelSchemaDefinition.pluralName = "CommentData";
     
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
+    
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CommentData.COURSECODE,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CommentData.TEACHERNAME,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CommentData.NAME,
@@ -148,18 +171,6 @@ class CommentData extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CommentData.COMMENT,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CommentData.COURSENAME,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CommentData.TEACHERNAME,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));

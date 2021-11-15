@@ -25,11 +25,11 @@ import 'package:flutter/foundation.dart';
 class CourseData extends Model {
   static const classType = const _CourseDataModelType();
   final String id;
-  final String? _courseCode;
   final String? _name;
   final int? _credits;
   final String? _time;
   final List<String>? _teachers;
+  final String? _courseCode;
 
   @override
   getInstanceType() => classType;
@@ -37,14 +37,6 @@ class CourseData extends Model {
   @override
   String getId() {
     return id;
-  }
-  
-  String get courseCode {
-    try {
-      return _courseCode!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
   }
   
   String get name {
@@ -75,16 +67,24 @@ class CourseData extends Model {
     return _teachers;
   }
   
-  const CourseData._internal({required this.id, required courseCode, required name, required credits, required time, teachers}): _courseCode = courseCode, _name = name, _credits = credits, _time = time, _teachers = teachers;
+  String get courseCode {
+    try {
+      return _courseCode!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory CourseData({String? id, required String courseCode, required String name, required int credits, required String time, List<String>? teachers}) {
+  const CourseData._internal({required this.id, required name, required credits, required time, teachers, required courseCode}): _name = name, _credits = credits, _time = time, _teachers = teachers, _courseCode = courseCode;
+  
+  factory CourseData({String? id, required String name, required int credits, required String time, List<String>? teachers, required String courseCode}) {
     return CourseData._internal(
       id: id == null ? UUID.getUUID() : id,
-      courseCode: courseCode,
       name: name,
       credits: credits,
       time: time,
-      teachers: teachers != null ? List<String>.unmodifiable(teachers) : teachers);
+      teachers: teachers != null ? List<String>.unmodifiable(teachers) : teachers,
+      courseCode: courseCode);
   }
   
   bool equals(Object other) {
@@ -96,11 +96,11 @@ class CourseData extends Model {
     if (identical(other, this)) return true;
     return other is CourseData &&
       id == other.id &&
-      _courseCode == other._courseCode &&
       _name == other._name &&
       _credits == other._credits &&
       _time == other._time &&
-      DeepCollectionEquality().equals(_teachers, other._teachers);
+      DeepCollectionEquality().equals(_teachers, other._teachers) &&
+      _courseCode == other._courseCode;
   }
   
   @override
@@ -112,55 +112,60 @@ class CourseData extends Model {
     
     buffer.write("CourseData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("courseCode=" + "$_courseCode" + ", ");
     buffer.write("name=" + "$_name" + ", ");
     buffer.write("credits=" + (_credits != null ? _credits!.toString() : "null") + ", ");
     buffer.write("time=" + "$_time" + ", ");
-    buffer.write("teachers=" + (_teachers != null ? _teachers!.toString() : "null"));
+    buffer.write("teachers=" + (_teachers != null ? _teachers!.toString() : "null") + ", ");
+    buffer.write("courseCode=" + "$_courseCode");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  CourseData copyWith({String? id, String? courseCode, String? name, int? credits, String? time, List<String>? teachers}) {
+  CourseData copyWith({String? id, String? name, int? credits, String? time, List<String>? teachers, String? courseCode}) {
     return CourseData(
       id: id ?? this.id,
-      courseCode: courseCode ?? this.courseCode,
       name: name ?? this.name,
       credits: credits ?? this.credits,
       time: time ?? this.time,
-      teachers: teachers ?? this.teachers);
+      teachers: teachers ?? this.teachers,
+      courseCode: courseCode ?? this.courseCode);
   }
   
   CourseData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _courseCode = json['courseCode'],
       _name = json['name'],
       _credits = (json['credits'] as num?)?.toInt(),
       _time = json['time'],
-      _teachers = json['teachers']?.cast<String>();
+      _teachers = json['teachers']?.cast<String>(),
+      _courseCode = json['courseCode'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'courseCode': _courseCode, 'name': _name, 'credits': _credits, 'time': _time, 'teachers': _teachers
+    'id': id, 'name': _name, 'credits': _credits, 'time': _time, 'teachers': _teachers, 'courseCode': _courseCode
   };
 
   static final QueryField ID = QueryField(fieldName: "courseData.id");
-  static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField CREDITS = QueryField(fieldName: "credits");
   static final QueryField TIME = QueryField(fieldName: "time");
   static final QueryField TEACHERS = QueryField(fieldName: "teachers");
+  static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "CourseData";
     modelSchemaDefinition.pluralName = "CourseData";
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.id());
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CourseData.COURSECODE,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
+    modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CourseData.NAME,
@@ -185,6 +190,12 @@ class CourseData extends Model {
       isRequired: false,
       isArray: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.collection, ofModelName: describeEnum(ModelFieldTypeEnum.string))
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CourseData.COURSECODE,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
   });
 }

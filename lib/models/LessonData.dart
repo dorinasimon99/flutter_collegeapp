@@ -24,12 +24,12 @@ import 'package:flutter/foundation.dart';
 class LessonData extends Model {
   static const classType = const _LessonDataModelType();
   final String id;
-  final String? _title;
   final String? _date;
   final String? _time;
-  final String? _ownerID;
+  final String? _owner;
   final String? _courseCode;
   final String? _description;
+  final String? _title;
 
   @override
   getInstanceType() => classType;
@@ -37,14 +37,6 @@ class LessonData extends Model {
   @override
   String getId() {
     return id;
-  }
-  
-  String get title {
-    try {
-      return _title!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
   }
   
   String get date {
@@ -63,9 +55,9 @@ class LessonData extends Model {
     }
   }
   
-  String get ownerID {
+  String get owner {
     try {
-      return _ownerID!;
+      return _owner!;
     } catch(e) {
       throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
     }
@@ -83,17 +75,25 @@ class LessonData extends Model {
     return _description;
   }
   
-  const LessonData._internal({required this.id, required title, required date, required time, required ownerID, required courseCode, description}): _title = title, _date = date, _time = time, _ownerID = ownerID, _courseCode = courseCode, _description = description;
+  String get title {
+    try {
+      return _title!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory LessonData({String? id, required String title, required String date, required String time, required String ownerID, required String courseCode, String? description}) {
+  const LessonData._internal({required this.id, required date, required time, required owner, required courseCode, description, required title}): _date = date, _time = time, _owner = owner, _courseCode = courseCode, _description = description, _title = title;
+  
+  factory LessonData({String? id, required String date, required String time, required String owner, required String courseCode, String? description, required String title}) {
     return LessonData._internal(
       id: id == null ? UUID.getUUID() : id,
-      title: title,
       date: date,
       time: time,
-      ownerID: ownerID,
+      owner: owner,
       courseCode: courseCode,
-      description: description);
+      description: description,
+      title: title);
   }
   
   bool equals(Object other) {
@@ -105,12 +105,12 @@ class LessonData extends Model {
     if (identical(other, this)) return true;
     return other is LessonData &&
       id == other.id &&
-      _title == other._title &&
       _date == other._date &&
       _time == other._time &&
-      _ownerID == other._ownerID &&
+      _owner == other._owner &&
       _courseCode == other._courseCode &&
-      _description == other._description;
+      _description == other._description &&
+      _title == other._title;
   }
   
   @override
@@ -122,59 +122,64 @@ class LessonData extends Model {
     
     buffer.write("LessonData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("title=" + "$_title" + ", ");
     buffer.write("date=" + "$_date" + ", ");
     buffer.write("time=" + "$_time" + ", ");
-    buffer.write("ownerID=" + "$_ownerID" + ", ");
+    buffer.write("owner=" + "$_owner" + ", ");
     buffer.write("courseCode=" + "$_courseCode" + ", ");
-    buffer.write("description=" + "$_description");
+    buffer.write("description=" + "$_description" + ", ");
+    buffer.write("title=" + "$_title");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  LessonData copyWith({String? id, String? title, String? date, String? time, String? ownerID, String? courseCode, String? description}) {
+  LessonData copyWith({String? id, String? date, String? time, String? owner, String? courseCode, String? description, String? title}) {
     return LessonData(
       id: id ?? this.id,
-      title: title ?? this.title,
       date: date ?? this.date,
       time: time ?? this.time,
-      ownerID: ownerID ?? this.ownerID,
+      owner: owner ?? this.owner,
       courseCode: courseCode ?? this.courseCode,
-      description: description ?? this.description);
+      description: description ?? this.description,
+      title: title ?? this.title);
   }
   
   LessonData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _title = json['title'],
       _date = json['date'],
       _time = json['time'],
-      _ownerID = json['ownerID'],
+      _owner = json['owner'],
       _courseCode = json['courseCode'],
-      _description = json['description'];
+      _description = json['description'],
+      _title = json['title'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'title': _title, 'date': _date, 'time': _time, 'ownerID': _ownerID, 'courseCode': _courseCode, 'description': _description
+    'id': id, 'date': _date, 'time': _time, 'owner': _owner, 'courseCode': _courseCode, 'description': _description, 'title': _title
   };
 
   static final QueryField ID = QueryField(fieldName: "lessonData.id");
-  static final QueryField TITLE = QueryField(fieldName: "title");
   static final QueryField DATE = QueryField(fieldName: "date");
   static final QueryField TIME = QueryField(fieldName: "time");
-  static final QueryField OWNERID = QueryField(fieldName: "ownerID");
+  static final QueryField OWNER = QueryField(fieldName: "owner");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField DESCRIPTION = QueryField(fieldName: "description");
+  static final QueryField TITLE = QueryField(fieldName: "title");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "LessonData";
     modelSchemaDefinition.pluralName = "LessonData";
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.id());
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: LessonData.TITLE,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
+    modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: LessonData.DATE,
@@ -189,7 +194,7 @@ class LessonData extends Model {
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: LessonData.OWNERID,
+      key: LessonData.OWNER,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
@@ -203,6 +208,12 @@ class LessonData extends Model {
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: LessonData.DESCRIPTION,
       isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: LessonData.TITLE,
+      isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
   });

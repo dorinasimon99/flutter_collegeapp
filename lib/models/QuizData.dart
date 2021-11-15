@@ -16,7 +16,6 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
-import 'package:collection/collection.dart';
 import 'package:flutter/foundation.dart';
 
 
@@ -25,10 +24,11 @@ import 'package:flutter/foundation.dart';
 class QuizData extends Model {
   static const classType = const _QuizDataModelType();
   final String id;
-  final String? _lessonID;
   final String? _title;
-  final List<String>? _questions;
-  final List<String>? _answers;
+  final String? _lessonID;
+  final String? _link;
+  final bool? _visible;
+  final String? _description;
 
   @override
   getInstanceType() => classType;
@@ -36,14 +36,6 @@ class QuizData extends Model {
   @override
   String getId() {
     return id;
-  }
-  
-  String get lessonID {
-    try {
-      return _lessonID!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
   }
   
   String get title {
@@ -54,31 +46,44 @@ class QuizData extends Model {
     }
   }
   
-  List<String> get questions {
+  String get lessonID {
     try {
-      return _questions!;
+      return _lessonID!;
     } catch(e) {
       throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
     }
   }
   
-  List<String> get answers {
+  String get link {
     try {
-      return _answers!;
+      return _link!;
     } catch(e) {
       throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
     }
   }
   
-  const QuizData._internal({required this.id, required lessonID, required title, required questions, required answers}): _lessonID = lessonID, _title = title, _questions = questions, _answers = answers;
+  bool get visible {
+    try {
+      return _visible!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory QuizData({String? id, required String lessonID, required String title, required List<String> questions, required List<String> answers}) {
+  String? get description {
+    return _description;
+  }
+  
+  const QuizData._internal({required this.id, required title, required lessonID, required link, required visible, description}): _title = title, _lessonID = lessonID, _link = link, _visible = visible, _description = description;
+  
+  factory QuizData({String? id, required String title, required String lessonID, required String link, required bool visible, String? description}) {
     return QuizData._internal(
       id: id == null ? UUID.getUUID() : id,
-      lessonID: lessonID,
       title: title,
-      questions: questions != null ? List<String>.unmodifiable(questions) : questions,
-      answers: answers != null ? List<String>.unmodifiable(answers) : answers);
+      lessonID: lessonID,
+      link: link,
+      visible: visible,
+      description: description);
   }
   
   bool equals(Object other) {
@@ -90,10 +95,11 @@ class QuizData extends Model {
     if (identical(other, this)) return true;
     return other is QuizData &&
       id == other.id &&
-      _lessonID == other._lessonID &&
       _title == other._title &&
-      DeepCollectionEquality().equals(_questions, other._questions) &&
-      DeepCollectionEquality().equals(_answers, other._answers);
+      _lessonID == other._lessonID &&
+      _link == other._link &&
+      _visible == other._visible &&
+      _description == other._description;
   }
   
   @override
@@ -105,51 +111,60 @@ class QuizData extends Model {
     
     buffer.write("QuizData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("lessonID=" + "$_lessonID" + ", ");
     buffer.write("title=" + "$_title" + ", ");
-    buffer.write("questions=" + (_questions != null ? _questions!.toString() : "null") + ", ");
-    buffer.write("answers=" + (_answers != null ? _answers!.toString() : "null"));
+    buffer.write("lessonID=" + "$_lessonID" + ", ");
+    buffer.write("link=" + "$_link" + ", ");
+    buffer.write("visible=" + (_visible != null ? _visible!.toString() : "null") + ", ");
+    buffer.write("description=" + "$_description");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  QuizData copyWith({String? id, String? lessonID, String? title, List<String>? questions, List<String>? answers}) {
+  QuizData copyWith({String? id, String? title, String? lessonID, String? link, bool? visible, String? description}) {
     return QuizData(
       id: id ?? this.id,
-      lessonID: lessonID ?? this.lessonID,
       title: title ?? this.title,
-      questions: questions ?? this.questions,
-      answers: answers ?? this.answers);
+      lessonID: lessonID ?? this.lessonID,
+      link: link ?? this.link,
+      visible: visible ?? this.visible,
+      description: description ?? this.description);
   }
   
   QuizData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _lessonID = json['lessonID'],
       _title = json['title'],
-      _questions = json['questions']?.cast<String>(),
-      _answers = json['answers']?.cast<String>();
+      _lessonID = json['lessonID'],
+      _link = json['link'],
+      _visible = json['visible'],
+      _description = json['description'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'lessonID': _lessonID, 'title': _title, 'questions': _questions, 'answers': _answers
+    'id': id, 'title': _title, 'lessonID': _lessonID, 'link': _link, 'visible': _visible, 'description': _description
   };
 
   static final QueryField ID = QueryField(fieldName: "quizData.id");
-  static final QueryField LESSONID = QueryField(fieldName: "lessonID");
   static final QueryField TITLE = QueryField(fieldName: "title");
-  static final QueryField QUESTIONS = QueryField(fieldName: "questions");
-  static final QueryField ANSWERS = QueryField(fieldName: "answers");
+  static final QueryField LESSONID = QueryField(fieldName: "lessonID");
+  static final QueryField LINK = QueryField(fieldName: "link");
+  static final QueryField VISIBLE = QueryField(fieldName: "visible");
+  static final QueryField DESCRIPTION = QueryField(fieldName: "description");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "QuizData";
     modelSchemaDefinition.pluralName = "QuizData";
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.id());
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: QuizData.LESSONID,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
+    modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: QuizData.TITLE,
@@ -158,17 +173,27 @@ class QuizData extends Model {
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: QuizData.QUESTIONS,
+      key: QuizData.LESSONID,
       isRequired: true,
-      isArray: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.collection, ofModelName: describeEnum(ModelFieldTypeEnum.string))
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: QuizData.ANSWERS,
+      key: QuizData.LINK,
       isRequired: true,
-      isArray: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.collection, ofModelName: describeEnum(ModelFieldTypeEnum.string))
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: QuizData.VISIBLE,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.bool)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: QuizData.DESCRIPTION,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
   });
 }

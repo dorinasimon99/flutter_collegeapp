@@ -25,10 +25,12 @@ import 'package:flutter/foundation.dart';
 class CardData extends Model {
   static const classType = const _CardDataModelType();
   final String id;
-  final String? _courseCode;
-  final String? _courseName;
+  final String? _title;
   final List<String>? _questions;
   final List<String>? _answers;
+  final String? _courseCode;
+  final String? _courseName;
+  final bool? _isFavorite;
 
   @override
   getInstanceType() => classType;
@@ -38,20 +40,8 @@ class CardData extends Model {
     return id;
   }
   
-  String get courseCode {
-    try {
-      return _courseCode!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
-  }
-  
-  String get courseName {
-    try {
-      return _courseName!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
+  String? get title {
+    return _title;
   }
   
   List<String> get questions {
@@ -70,15 +60,41 @@ class CardData extends Model {
     }
   }
   
-  const CardData._internal({required this.id, required courseCode, required courseName, required questions, required answers}): _courseCode = courseCode, _courseName = courseName, _questions = questions, _answers = answers;
+  String get courseCode {
+    try {
+      return _courseCode!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory CardData({String? id, required String courseCode, required String courseName, required List<String> questions, required List<String> answers}) {
+  String get courseName {
+    try {
+      return _courseName!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
+  
+  bool get isFavorite {
+    try {
+      return _isFavorite!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
+  
+  const CardData._internal({required this.id, title, required questions, required answers, required courseCode, required courseName, required isFavorite}): _title = title, _questions = questions, _answers = answers, _courseCode = courseCode, _courseName = courseName, _isFavorite = isFavorite;
+  
+  factory CardData({String? id, String? title, required List<String> questions, required List<String> answers, required String courseCode, required String courseName, required bool isFavorite}) {
     return CardData._internal(
       id: id == null ? UUID.getUUID() : id,
+      title: title,
+      questions: questions != null ? List<String>.unmodifiable(questions) : questions,
+      answers: answers != null ? List<String>.unmodifiable(answers) : answers,
       courseCode: courseCode,
       courseName: courseName,
-      questions: questions != null ? List<String>.unmodifiable(questions) : questions,
-      answers: answers != null ? List<String>.unmodifiable(answers) : answers);
+      isFavorite: isFavorite);
   }
   
   bool equals(Object other) {
@@ -90,10 +106,12 @@ class CardData extends Model {
     if (identical(other, this)) return true;
     return other is CardData &&
       id == other.id &&
+      _title == other._title &&
+      DeepCollectionEquality().equals(_questions, other._questions) &&
+      DeepCollectionEquality().equals(_answers, other._answers) &&
       _courseCode == other._courseCode &&
       _courseName == other._courseName &&
-      DeepCollectionEquality().equals(_questions, other._questions) &&
-      DeepCollectionEquality().equals(_answers, other._answers);
+      _isFavorite == other._isFavorite;
   }
   
   @override
@@ -105,55 +123,68 @@ class CardData extends Model {
     
     buffer.write("CardData {");
     buffer.write("id=" + "$id" + ", ");
+    buffer.write("title=" + "$_title" + ", ");
+    buffer.write("questions=" + (_questions != null ? _questions!.toString() : "null") + ", ");
+    buffer.write("answers=" + (_answers != null ? _answers!.toString() : "null") + ", ");
     buffer.write("courseCode=" + "$_courseCode" + ", ");
     buffer.write("courseName=" + "$_courseName" + ", ");
-    buffer.write("questions=" + (_questions != null ? _questions!.toString() : "null") + ", ");
-    buffer.write("answers=" + (_answers != null ? _answers!.toString() : "null"));
+    buffer.write("isFavorite=" + (_isFavorite != null ? _isFavorite!.toString() : "null"));
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  CardData copyWith({String? id, String? courseCode, String? courseName, List<String>? questions, List<String>? answers}) {
+  CardData copyWith({String? id, String? title, List<String>? questions, List<String>? answers, String? courseCode, String? courseName, bool? isFavorite}) {
     return CardData(
       id: id ?? this.id,
+      title: title ?? this.title,
+      questions: questions ?? this.questions,
+      answers: answers ?? this.answers,
       courseCode: courseCode ?? this.courseCode,
       courseName: courseName ?? this.courseName,
-      questions: questions ?? this.questions,
-      answers: answers ?? this.answers);
+      isFavorite: isFavorite ?? this.isFavorite);
   }
   
   CardData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
+      _title = json['title'],
+      _questions = json['questions']?.cast<String>(),
+      _answers = json['answers']?.cast<String>(),
       _courseCode = json['courseCode'],
       _courseName = json['courseName'],
-      _questions = json['questions']?.cast<String>(),
-      _answers = json['answers']?.cast<String>();
+      _isFavorite = json['isFavorite'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'courseCode': _courseCode, 'courseName': _courseName, 'questions': _questions, 'answers': _answers
+    'id': id, 'title': _title, 'questions': _questions, 'answers': _answers, 'courseCode': _courseCode, 'courseName': _courseName, 'isFavorite': _isFavorite
   };
 
   static final QueryField ID = QueryField(fieldName: "cardData.id");
-  static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
-  static final QueryField COURSENAME = QueryField(fieldName: "courseName");
+  static final QueryField TITLE = QueryField(fieldName: "title");
   static final QueryField QUESTIONS = QueryField(fieldName: "questions");
   static final QueryField ANSWERS = QueryField(fieldName: "answers");
+  static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
+  static final QueryField COURSENAME = QueryField(fieldName: "courseName");
+  static final QueryField ISFAVORITE = QueryField(fieldName: "isFavorite");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "CardData";
     modelSchemaDefinition.pluralName = "CardData";
     
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
+    
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CardData.COURSECODE,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CardData.COURSENAME,
-      isRequired: true,
+      key: CardData.TITLE,
+      isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
@@ -169,6 +200,24 @@ class CardData extends Model {
       isRequired: true,
       isArray: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.collection, ofModelName: describeEnum(ModelFieldTypeEnum.string))
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CardData.COURSECODE,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CardData.COURSENAME,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: CardData.ISFAVORITE,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.bool)
     ));
   });
 }

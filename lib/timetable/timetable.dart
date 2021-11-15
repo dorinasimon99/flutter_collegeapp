@@ -1,11 +1,17 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
-import 'package:flutter_collegeapp/courses/todos/todos_cubit.dart';
-import 'package:flutter_collegeapp/lesson/lesson_cubit.dart';
+import 'package:flutter_collegeapp/bloc/todos/todos_cubit.dart';
+import 'package:flutter_collegeapp/bloc/lessons/lesson_cubit.dart';
+import 'package:flutter_collegeapp/common/local_storage.dart';
+import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/models/LessonData.dart';
 import 'package:flutter_collegeapp/models/TodoData.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
+import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../app.dart';
 
@@ -20,83 +26,123 @@ class TimetablePage extends StatefulWidget {
 
 class _TimetablePageState extends State<TimetablePage> {
   _TimetablePageState();
+  List<LessonData> _lessons = <LessonData>[];
+  List<TodoData>? _todos;
+  String? _localUsername;
+  String? _localName;
+  int? _localSemester;
+
+  void checkConnectivity() async {
+    var username = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
+    var name = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
+    var actualSemester = await LocalStorage.localStorage.readInt(LocalStorage.SIGNED_IN_SEMESTER);
+    if(username != null && name != null && actualSemester != null){
+      setState(() {
+        _localUsername = username;
+        _localName = name;
+        _localSemester = actualSemester;
+      });
+      BlocProvider.of<LessonsCubit>(context)..getUserLessons(username, actualSemester);
+    }
+
+  }
+
+  @override
+  void initState(){
+    checkConnectivity();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: header(context, isMenu: false),
+        appBar: Header(context, isMenu: false),
+        bottomNavigationBar: Container(
+          height: 60,
+          width: MediaQuery.of(context).size.width,
+          child: Stack(
+            alignment: Alignment.bottomCenter,
+            children: [
+              Positioned(
+                  bottom: 0,
+                  child: HomeButton(context))
+            ],
+          ),
+        ),
         body: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10.0),
-            child: Column(children: [
-              Expanded(
-                child: BlocProvider(
-                    create: (context) => LessonsCubit()..getLessons(),
-                    child: BlocBuilder<LessonsCubit, LessonsState>(builder: (context, state) {
-                      if (state is ListLessonsSuccess) {
-                        var lessons = state.lessons;
-                        return BlocProvider(
-                          create: (context) => TodosCubit()..getTodosWithDeadline(),
-                          child: BlocBuilder<TodosCubit, TodosState>(
-                            builder: (context, state) {
-                              if (state is ListTodosSuccess) {
-                                return SfCalendar(
-                                    view: CalendarView.week,
-                                    firstDayOfWeek: 1,
-                                    timeSlotViewSettings: TimeSlotViewSettings(
-                                      startHour: 7,
-                                      endHour: 21,
-                                      nonWorkingDays: <int>[DateTime.saturday, DateTime.sunday],
-                                    ),
-                                    dataSource: MeetingDataSource(_getDataSource(lessons, todos: state.todos)),
-                                    todayHighlightColor: Color(0xFF9FC2A0),
-                                    headerStyle: CalendarHeaderStyle(backgroundColor: Color(0xFFB4E7B6)),
-                                    viewHeaderStyle: ViewHeaderStyle(backgroundColor: Color(0xFFB4E7B6)),
-                                    appointmentTextStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 12, color: Colors.black),
-                                    onTap: (CalendarTapDetails details) =>
-                                        details.appointments != null && !details.appointments![0].isAllDay
-                                            ? Navigator.pushNamed(
-                                                context, 'lesson',
-                                                arguments: lessons.firstWhere((element) =>
-                                                element.title == details.appointments![0].eventName))
-                                            : {});
-                              } else if (state is ListTodosFailure) {
-                                return SfCalendar(
-                                    view: CalendarView.week,
-                                    firstDayOfWeek: 1,
-                                    timeSlotViewSettings: TimeSlotViewSettings(
-                                      startHour: 7,
-                                      endHour: 21,
-                                      nonWorkingDays: <int>[DateTime.saturday, DateTime.sunday],
-                                    ),
-                                    dataSource: MeetingDataSource(_getDataSource(lessons)),
-                                    todayHighlightColor: Color(0xFF9FC2A0),
-                                    headerStyle: CalendarHeaderStyle(backgroundColor: Color(0xFFB4E7B6)),
-                                    viewHeaderStyle: ViewHeaderStyle(backgroundColor: Color(0xFFB4E7B6)),
-                                    appointmentTextStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 12, color: Colors.black),
-                                    onTap: (CalendarTapDetails details) =>
-                                        details.appointments != null
-                                            ? Navigator.pushNamed(context, 'lesson', arguments: lessons.firstWhere(
-                                                    (element) => element.title == details.appointments![0].eventName))
-                                            : {});
-                              } else {
-                                return LoadingView();
-                              }
-                            },
-                          ),
-                        );
-                      } else if (state is ListLessonsFailure) {
-                        return Center(child: Text(state.exception.toString()));
-                      } else {
-                        return LoadingView();
-                      }
-                    })
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
+          child: Column(children: [
+            Row(
+              children: [
+                Flexible(
+                  child: Text(
+                    AppLocalizations.of(context)?.timetable ?? 'Timetable',
+                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                  ),
                 ),
+              ],
+            ),
+            Expanded(
+              child: BlocListener<TodosCubit, TodosState>(
+                    listener: (context, state) {
+                      if (state is ListTodosWithDeadlineSuccess) {
+                        setState(() {
+                          _todos = state.todos;
+                        });
+                      } else if(state is ListTodosWithDeadlineFailure){
+                        showErrorAlert(state.exception.toString(), context);
+                      }
+                    },
+                    child: SfCalendar(
+                              view: CalendarView.week,
+                              firstDayOfWeek: 1,
+                              timeSlotViewSettings: TimeSlotViewSettings(
+                                startHour: 7,
+                                endHour: 21,
+                                nonWorkingDays: <int>[DateTime.saturday, DateTime.sunday],
+                              ),
+                              dataSource: MeetingDataSource(
+                                  _getDataSource(_lessons, todos: _todos)),
+                              todayHighlightColor: Color(0xFF9FC2A0),
+                              headerStyle:
+                                  CalendarHeaderStyle(backgroundColor: Resources.customColors.cursorGreen),
+                              viewHeaderStyle:
+                                  ViewHeaderStyle(backgroundColor: Resources.customColors.cursorGreen),
+                              appointmentTextStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 12),
+                              onTap: (CalendarTapDetails details) =>
+                                  details.appointments != null &&
+                                          !details.appointments![0].isAllDay
+                                      ? Navigator.pushNamed(context, 'lesson',
+                                          arguments: _lessons.firstWhere((element) =>
+                                              element.title ==
+                                              details.appointments![0].eventName))
+                                      : {}),
+
+
               ),
-              Align(
-                alignment: Alignment.bottomCenter,
-                child: homeButton(context),
-              )]
-            )
+            ),
+            BlocListener<LessonsCubit, LessonsState>(
+                listener: (context, state) {
+                  if (state is CreateLessonSuccess) {
+                    BlocProvider.of<LessonsCubit>(context)..getUserLessons(_localUsername!, _localSemester!);
+                  } else if (state is ListUserLessonsSuccess) {
+                    setState(() {
+                      _lessons = state.lessons;
+                    });
+                    BlocProvider.of<TodosCubit>(context)
+                      ..getTodosWithDeadline(_localUsername!);
+                  } else if(state is CreateLessonFailure){
+                    showErrorAlert(state.exception.toString(), context);
+                  } else if(state is ListUserLessonsFailure){
+                    showErrorAlert(state.exception.toString(), context);
+                  } else if(state is UpdateLessonSuccess){
+                    BlocProvider.of<LessonsCubit>(context)..getUserLessons(_localUsername!, _localSemester!);
+                  } else if(state is UpdateLessonFailure){
+                    showErrorAlert(state.exception.toString(), context);
+                  }
+                },
+                child: Container()),
+          ]),
         )
     );
   }
@@ -112,17 +158,18 @@ class _TimetablePageState extends State<TimetablePage> {
       DateTime endTime = DateTime(int.parse(element.date.split(".")[0]),
           int.parse(element.date.split(".")[1]), int.parse(element.date.split(".")[2]),
           int.parse(to.split(":")[0]), int.parse(to.split(":")[1]), 0);
-      meetings.add(Meeting(element.title, startTime, endTime, const Color(0xFFB4E7B6), false, ""));
+      meetings.add(Meeting(element.title, startTime, endTime, Resources.customColors.cursorGreen, false, ""));
     });
     if(todos != null){
       todos.forEach((element) {
-        DateTime startTime = DateTime(int.parse(element.deadline!.split(".")[0]),
-            int.parse(element.deadline!.split(".")[1]), int.parse(element.deadline!.split(".")[2]));
-        DateTime endTime = DateTime(int.parse(element.deadline!.split(".")[0]),
-            int.parse(element.deadline!.split(".")[1]), int.parse(element.deadline!.split(".")[2]));
-        meetings.add(Meeting(element.name, startTime, endTime, element.done ? const Color(
-            0xFFC9C9C9) : const Color(
-            0xFFADCBAD), true, ""));
+        if(element.deadline != null){
+          DateTime startTime = DateTime(int.parse(element.deadline!.split(".")[0]),
+              int.parse(element.deadline!.split(".")[1]), int.parse(element.deadline!.split(".")[2]));
+          DateTime endTime = DateTime(int.parse(element.deadline!.split(".")[0]),
+              int.parse(element.deadline!.split(".")[1]), int.parse(element.deadline!.split(".")[2]));
+          meetings.add(Meeting(element.name, startTime, endTime, element.done ?
+            Resources.customColors.todoDone : Resources.customColors.todoGreen, true, ""));
+        }
       });
     }
     return meetings;

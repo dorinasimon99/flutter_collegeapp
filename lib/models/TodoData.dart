@@ -24,12 +24,12 @@ import 'package:flutter/foundation.dart';
 class TodoData extends Model {
   static const classType = const _TodoDataModelType();
   final String id;
-  final String? _name;
   final bool? _done;
   final String? _owner;
   final String? _courseCode;
   final String? _lessonID;
   final String? _deadline;
+  final String? _name;
 
   @override
   getInstanceType() => classType;
@@ -37,14 +37,6 @@ class TodoData extends Model {
   @override
   String getId() {
     return id;
-  }
-  
-  String get name {
-    try {
-      return _name!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
   }
   
   bool get done {
@@ -79,17 +71,25 @@ class TodoData extends Model {
     return _deadline;
   }
   
-  const TodoData._internal({required this.id, required name, required done, required owner, required courseCode, lessonID, deadline}): _name = name, _done = done, _owner = owner, _courseCode = courseCode, _lessonID = lessonID, _deadline = deadline;
+  String get name {
+    try {
+      return _name!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory TodoData({String? id, required String name, required bool done, required String owner, required String courseCode, String? lessonID, String? deadline}) {
+  const TodoData._internal({required this.id, required done, required owner, required courseCode, lessonID, deadline, required name}): _done = done, _owner = owner, _courseCode = courseCode, _lessonID = lessonID, _deadline = deadline, _name = name;
+  
+  factory TodoData({String? id, required bool done, required String owner, required String courseCode, String? lessonID, String? deadline, required String name}) {
     return TodoData._internal(
       id: id == null ? UUID.getUUID() : id,
-      name: name,
       done: done,
       owner: owner,
       courseCode: courseCode,
       lessonID: lessonID,
-      deadline: deadline);
+      deadline: deadline,
+      name: name);
   }
   
   bool equals(Object other) {
@@ -101,12 +101,12 @@ class TodoData extends Model {
     if (identical(other, this)) return true;
     return other is TodoData &&
       id == other.id &&
-      _name == other._name &&
       _done == other._done &&
       _owner == other._owner &&
       _courseCode == other._courseCode &&
       _lessonID == other._lessonID &&
-      _deadline == other._deadline;
+      _deadline == other._deadline &&
+      _name == other._name;
   }
   
   @override
@@ -118,59 +118,64 @@ class TodoData extends Model {
     
     buffer.write("TodoData {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("name=" + "$_name" + ", ");
     buffer.write("done=" + (_done != null ? _done!.toString() : "null") + ", ");
     buffer.write("owner=" + "$_owner" + ", ");
     buffer.write("courseCode=" + "$_courseCode" + ", ");
     buffer.write("lessonID=" + "$_lessonID" + ", ");
-    buffer.write("deadline=" + "$_deadline");
+    buffer.write("deadline=" + "$_deadline" + ", ");
+    buffer.write("name=" + "$_name");
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  TodoData copyWith({String? id, String? name, bool? done, String? owner, String? courseCode, String? lessonID, String? deadline}) {
+  TodoData copyWith({String? id, bool? done, String? owner, String? courseCode, String? lessonID, String? deadline, String? name}) {
     return TodoData(
       id: id ?? this.id,
-      name: name ?? this.name,
       done: done ?? this.done,
       owner: owner ?? this.owner,
       courseCode: courseCode ?? this.courseCode,
       lessonID: lessonID ?? this.lessonID,
-      deadline: deadline ?? this.deadline);
+      deadline: deadline ?? this.deadline,
+      name: name ?? this.name);
   }
   
   TodoData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _name = json['name'],
       _done = json['done'],
       _owner = json['owner'],
       _courseCode = json['courseCode'],
       _lessonID = json['lessonID'],
-      _deadline = json['deadline'];
+      _deadline = json['deadline'],
+      _name = json['name'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'name': _name, 'done': _done, 'owner': _owner, 'courseCode': _courseCode, 'lessonID': _lessonID, 'deadline': _deadline
+    'id': id, 'done': _done, 'owner': _owner, 'courseCode': _courseCode, 'lessonID': _lessonID, 'deadline': _deadline, 'name': _name
   };
 
   static final QueryField ID = QueryField(fieldName: "todoData.id");
-  static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField DONE = QueryField(fieldName: "done");
   static final QueryField OWNER = QueryField(fieldName: "owner");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField LESSONID = QueryField(fieldName: "lessonID");
   static final QueryField DEADLINE = QueryField(fieldName: "deadline");
+  static final QueryField NAME = QueryField(fieldName: "name");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "TodoData";
     modelSchemaDefinition.pluralName = "TodoData";
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.id());
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
     
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: TodoData.NAME,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
+    modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: TodoData.DONE,
@@ -199,6 +204,12 @@ class TodoData extends Model {
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: TodoData.DEADLINE,
       isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: TodoData.NAME,
+      isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
   });

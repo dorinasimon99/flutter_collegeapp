@@ -24,12 +24,14 @@ import 'package:flutter/foundation.dart';
 class UserCourse extends Model {
   static const classType = const _UserCourseModelType();
   final String id;
-  final String? _userID;
+  final String? _name;
   final String? _courseCode;
   final String? _rating;
   final int? _ratingNum;
   final int? _semester;
   final int? _grade;
+  final String? _username;
+  final bool? _visible;
 
   @override
   getInstanceType() => classType;
@@ -39,9 +41,9 @@ class UserCourse extends Model {
     return id;
   }
   
-  String get userID {
+  String get name {
     try {
-      return _userID!;
+      return _name!;
     } catch(e) {
       throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
     }
@@ -71,17 +73,31 @@ class UserCourse extends Model {
     return _grade;
   }
   
-  const UserCourse._internal({required this.id, required userID, required courseCode, rating, ratingNum, semester, grade}): _userID = userID, _courseCode = courseCode, _rating = rating, _ratingNum = ratingNum, _semester = semester, _grade = grade;
+  String get username {
+    try {
+      return _username!;
+    } catch(e) {
+      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
+    }
+  }
   
-  factory UserCourse({String? id, required String userID, required String courseCode, String? rating, int? ratingNum, int? semester, int? grade}) {
+  bool? get visible {
+    return _visible;
+  }
+  
+  const UserCourse._internal({required this.id, required name, required courseCode, rating, ratingNum, semester, grade, required username, visible}): _name = name, _courseCode = courseCode, _rating = rating, _ratingNum = ratingNum, _semester = semester, _grade = grade, _username = username, _visible = visible;
+  
+  factory UserCourse({String? id, required String name, required String courseCode, String? rating, int? ratingNum, int? semester, int? grade, required String username, bool? visible}) {
     return UserCourse._internal(
       id: id == null ? UUID.getUUID() : id,
-      userID: userID,
+      name: name,
       courseCode: courseCode,
       rating: rating,
       ratingNum: ratingNum,
       semester: semester,
-      grade: grade);
+      grade: grade,
+      username: username,
+      visible: visible);
   }
   
   bool equals(Object other) {
@@ -93,12 +109,14 @@ class UserCourse extends Model {
     if (identical(other, this)) return true;
     return other is UserCourse &&
       id == other.id &&
-      _userID == other._userID &&
+      _name == other._name &&
       _courseCode == other._courseCode &&
       _rating == other._rating &&
       _ratingNum == other._ratingNum &&
       _semester == other._semester &&
-      _grade == other._grade;
+      _grade == other._grade &&
+      _username == other._username &&
+      _visible == other._visible;
   }
   
   @override
@@ -110,56 +128,75 @@ class UserCourse extends Model {
     
     buffer.write("UserCourse {");
     buffer.write("id=" + "$id" + ", ");
-    buffer.write("userID=" + "$_userID" + ", ");
+    buffer.write("name=" + "$_name" + ", ");
     buffer.write("courseCode=" + "$_courseCode" + ", ");
     buffer.write("rating=" + "$_rating" + ", ");
     buffer.write("ratingNum=" + (_ratingNum != null ? _ratingNum!.toString() : "null") + ", ");
     buffer.write("semester=" + (_semester != null ? _semester!.toString() : "null") + ", ");
-    buffer.write("grade=" + (_grade != null ? _grade!.toString() : "null"));
+    buffer.write("grade=" + (_grade != null ? _grade!.toString() : "null") + ", ");
+    buffer.write("username=" + "$_username" + ", ");
+    buffer.write("visible=" + (_visible != null ? _visible!.toString() : "null"));
     buffer.write("}");
     
     return buffer.toString();
   }
   
-  UserCourse copyWith({String? id, String? userID, String? courseCode, String? rating, int? ratingNum, int? semester, int? grade}) {
+  UserCourse copyWith({String? id, String? name, String? courseCode, String? rating, int? ratingNum, int? semester, int? grade, String? username, bool? visible}) {
     return UserCourse(
       id: id ?? this.id,
-      userID: userID ?? this.userID,
+      name: name ?? this.name,
       courseCode: courseCode ?? this.courseCode,
       rating: rating ?? this.rating,
       ratingNum: ratingNum ?? this.ratingNum,
       semester: semester ?? this.semester,
-      grade: grade ?? this.grade);
+      grade: grade ?? this.grade,
+      username: username ?? this.username,
+      visible: visible ?? this.visible);
   }
   
   UserCourse.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
-      _userID = json['userID'],
+      _name = json['name'],
       _courseCode = json['courseCode'],
       _rating = json['rating'],
       _ratingNum = (json['ratingNum'] as num?)?.toInt(),
       _semester = (json['semester'] as num?)?.toInt(),
-      _grade = (json['grade'] as num?)?.toInt();
+      _grade = (json['grade'] as num?)?.toInt(),
+      _username = json['username'],
+      _visible = json['visible'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'userID': _userID, 'courseCode': _courseCode, 'rating': _rating, 'ratingNum': _ratingNum, 'semester': _semester, 'grade': _grade
+    'id': id, 'name': _name, 'courseCode': _courseCode, 'rating': _rating, 'ratingNum': _ratingNum, 'semester': _semester, 'grade': _grade, 'username': _username, 'visible': _visible
   };
 
   static final QueryField ID = QueryField(fieldName: "userCourse.id");
-  static final QueryField USERID = QueryField(fieldName: "userID");
+  static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField RATING = QueryField(fieldName: "rating");
   static final QueryField RATINGNUM = QueryField(fieldName: "ratingNum");
   static final QueryField SEMESTER = QueryField(fieldName: "semester");
   static final QueryField GRADE = QueryField(fieldName: "grade");
+  static final QueryField USERNAME = QueryField(fieldName: "username");
+  static final QueryField VISIBLE = QueryField(fieldName: "visible");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
     modelSchemaDefinition.name = "UserCourse";
     modelSchemaDefinition.pluralName = "UserCourses";
     
+    modelSchemaDefinition.authRules = [
+      AuthRule(
+        authStrategy: AuthStrategy.PUBLIC,
+        operations: [
+          ModelOperation.CREATE,
+          ModelOperation.UPDATE,
+          ModelOperation.DELETE,
+          ModelOperation.READ
+        ])
+    ];
+    
     modelSchemaDefinition.addField(ModelFieldDefinition.id());
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: UserCourse.USERID,
+      key: UserCourse.NAME,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
@@ -192,6 +229,18 @@ class UserCourse extends Model {
       key: UserCourse.GRADE,
       isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.int)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: UserCourse.USERNAME,
+      isRequired: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.string)
+    ));
+    
+    modelSchemaDefinition.addField(ModelFieldDefinition.field(
+      key: UserCourse.VISIBLE,
+      isRequired: false,
+      ofType: ModelFieldType(ModelFieldTypeEnum.bool)
     ));
   });
 }

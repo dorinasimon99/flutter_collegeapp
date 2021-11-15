@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/app.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/days.dart';
-import 'package:flutter_collegeapp/courses/courses_cubit.dart';
+import 'package:flutter_collegeapp/common/local_storage.dart';
+import 'package:flutter_collegeapp/bloc/courses/courses_cubit.dart';
+import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:numberpicker/numberpicker.dart';
@@ -16,7 +20,7 @@ class AddCoursePage extends StatefulWidget {
 }
 
 class _AddCoursePageState extends State<AddCoursePage> {
-  String _currentDayValue = "Monday";
+  String _currentDayValue = Days.instance.days[0];
   int _currentCreditsValue = 0;
   int _currentStartHour = 8;
   int _currentStartMinute = 15;
@@ -25,12 +29,33 @@ class _AddCoursePageState extends State<AddCoursePage> {
   var _courseNameTextController = TextEditingController();
   var _courseCodeTextController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  CourseData? selectedCourse;
+  String? _localUsername;
+  String? _localName;
+  String? _localRole;
+  int? _localUserSemester;
+  var _allCourses = <CourseData>[];
 
-  var selectedCourse;
+  void _getUser() async {
+    var username = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
+    var name = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
+    var role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
+    var semester = await LocalStorage.localStorage.readInt(LocalStorage.SIGNED_IN_SEMESTER);
+    if(username != null && name != null && role != null && semester != null){
+      setState(() {
+        _localUsername = username;
+        _localName = name;
+        _localUserSemester = semester;
+        _localRole = role;
+      });
+    }
+    BlocProvider.of<CoursesCubit>(context)..getCourses();
+  }
 
   @override
   void initState(){
     super.initState();
+    _getUser();
   }
 
   @override
@@ -42,11 +67,12 @@ class _AddCoursePageState extends State<AddCoursePage> {
 
   @override
   Widget build(BuildContext context) {
-    setState(() {
-      selectedCourse = AppLocalizations.of(context)?.select_from_list ?? 'Select from list...';
-    });
+    List<Object?> args = ModalRoute.of(context)?.settings.arguments as List<Object?>;
+    _localUsername = args[0] as String;
+    _localName = args[1] as String;
+    _localUserSemester = args[2] as int;
     return Scaffold(
-        appBar: header(context, isMenu: false),
+        appBar: Header(context, isMenu: false),
         body: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10.0),
             child: SingleChildScrollView(
@@ -61,48 +87,73 @@ class _AddCoursePageState extends State<AddCoursePage> {
                       children: [
                         Text(
                             AppLocalizations.of(context)?.add_course ?? 'Add course',
-                            style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 40, color: Colors.black),
+                            style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
                         ),
-                        IconButton(
-                          onPressed: (){
-                            if (_formKey.currentState!.validate()){
-                              _saveCourse(context);
+                        BlocListener<CoursesCubit, CoursesState>(
+                          listener: (context, state) {
+                            if(state is CreateCourseSuccess){
+                              showSnackBar(context, AppLocalizations.of(context)?.course_added ?? 'Course added');
+                            } else if(state is UpdateCourseSuccess){
+                              showSnackBar(context, AppLocalizations.of(context)?.course_added ?? 'Course added');
+                            } else if(state is CreateCourseFailure){
+                              showErrorAlert(state.exception.toString(), context);
+                            } else if(state is UpdateCourseFailure){
+                              showErrorAlert(state.exception.toString(), context);
                             }
                           },
-                          icon: Icon(Icons.check, color: Color(0xFFA5D6A7), size: 45),
+                          child: IconButton(
+                            onPressed: (){
+                              if (_formKey.currentState!.validate()){
+                                _saveCourse(context);
+                              }
+                            },
+                            icon: Icon(Icons.check, color: Color(0xFFA5D6A7), size: 45),
+                          ),
                         )
                       ],
                     ),
-                    TextButton(
-                        onPressed: () => _showSelectCourseDialog(),
+                    BlocListener<CoursesCubit, CoursesState>(
+                      listener: (context, state) {
+                        if(state is ListCoursesSuccess){
+                          setState(() {
+                            _allCourses = state.courses;
+                          });
+                        } else if(state is ListCoursesFailure){
+                          showErrorAlert(state.exception.toString(), context);
+                        }
+                      },
+                      child: TextButton(
+                        onPressed: () => _showSelectCourseDialog(_allCourses),
                         child: Text(
                           AppLocalizations.of(context)?.select_from_list ?? 'Select from list...',
-                          style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
+                          style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
                         ),
                       ),
+                    ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 5.0),
                       child: TextFormField(
                         controller: _courseNameTextController,
+                        enabled: (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null,
                         decoration: InputDecoration(
                           hintText: AppLocalizations.of(context)?.course_name ?? 'Course name',
                           hintStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 18, color: Color(0xFF4F4F4F)),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
-                              color: Color(0xFFC7E5C8)
+                              color: Resources.customColors.cardGreen
                             )
                           ),
                           focusedBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color(0xFFC7E5C8)
+                                  color: Resources.customColors.cardGreen
                               )
                           ),
                         ),
-                        cursorColor: Color(0xFFC7E5C8),
-                        style: TextStyle(fontFamily: 'Glory', fontSize: 18, color: Colors.black),
+                        cursorColor: Resources.customColors.cardGreen,
+                        style: Resources.customTextStyles.getCustomTextStyle(fontSize: 18),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter some text';
+                            return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                           }
                           return null;
                         },
@@ -112,25 +163,28 @@ class _AddCoursePageState extends State<AddCoursePage> {
                       padding: const EdgeInsets.fromLTRB(10.0, 0, 10.0, 10.0),
                       child: TextFormField(
                         controller: _courseCodeTextController,
+                        enabled: (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null,
                         decoration: InputDecoration(
                           hintText: AppLocalizations.of(context)?.course_code ?? 'Course code',
                           hintStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 18, color: Color(0xFF4F4F4F)),
                           enabledBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color(0xFFC7E5C8)
+                                  color: Resources.customColors.cardGreen
                               )
                           ),
                           focusedBorder: UnderlineInputBorder(
                               borderSide: BorderSide(
-                                  color: Color(0xFFC7E5C8)
+                                  color: Resources.customColors.cardGreen
                               )
                           ),
                         ),
-                        cursorColor: Color(0xFFC7E5C8),
-                        style: TextStyle(fontFamily: 'Glory', fontSize: 18, color: Colors.black),
+                        cursorColor: Resources.customColors.cardGreen,
+                        style: Resources.customTextStyles.getCustomTextStyle(fontSize: 18),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter some text';
+                            return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
+                          } else if(_allCourses.isNotEmpty && _allCourses.any((element) => element.courseCode == value)){
+                            return AppLocalizations.of(context)?.existing_courseCode ?? 'This course code already exist!';
                           }
                           return null;
                         },
@@ -143,9 +197,9 @@ class _AddCoursePageState extends State<AddCoursePage> {
                           itemHeight: 40,
                           minValue: 0,
                           maxValue: 4,
-                          onChanged: (value) => setState(() {
+                          onChanged: (value) => (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null ? setState(() {
                             _currentDayValue = Days.instance.days[value];
-                          }),
+                          }) : (){},
                           textMapper: (numberText) {
                             switch(numberText){
                               case "0": return Days.instance.days[0];
@@ -157,111 +211,25 @@ class _AddCoursePageState extends State<AddCoursePage> {
                             }
                           },
                           value: Days.instance.days.indexOf(_currentDayValue),
-                          selectedTextStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                          textStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 14, color: Color(0xFF4F4F4F)),
+                          selectedTextStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+                          textStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 14, color: Color(0xFF4F4F4F)),
                         ),
                       ],
                     ),
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 15.0),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
-                        children: [
-                          Text(
-                            AppLocalizations.of(context)?.start ?? 'Start:',
-                            style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
-                          ),
-                          NumberPicker(
-                            itemHeight: 40,
-                            itemWidth: 50.0,
-                            minValue: 8,
-                            maxValue: 20,
-                            onChanged: (value) => setState(() {
-                              _currentStartHour = value;
-                            }),
-                            value: _currentStartHour,
-                            selectedTextStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                            textStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 14, color: Color(0xFF4F4F4F)),
-                          ),
-                          Text(
-                            ":",
-                            style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                          ),
-                          NumberPicker(
-                            itemHeight: 40,
-                            itemWidth: 50.0,
-                            minValue: 0,
-                            maxValue: 59,
-                            onChanged: (value) => setState(() {
-                              _currentStartMinute = value;
-                            }),
-                            value: _currentStartMinute,
-                            textMapper: (numberText) {
-                              switch(numberText){
-                                case "0": return "00";
-                                case "1": return "01";
-                                case "2": return "02";
-                                case "3": return "03";
-                                case "4": return "04";
-                                case "5": return "05";
-                                case "6": return "06";
-                                case "7": return "07";
-                                case "8": return "08";
-                                case "9": return "09";
-                                default: return numberText;
-                              }
-                            },
-                            selectedTextStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                            textStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 14, color: Color(0xFF4F4F4F)),
-                          ),
-                          Text(
-                            AppLocalizations.of(context)?.end ?? 'End:',
-                            style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
-                          ),
-                          NumberPicker(
-                            itemHeight: 40,
-                            itemWidth: 50.0,
-                            minValue: 8,
-                            maxValue: 20,
-                            onChanged: (value) => setState(() {
-                              _currentEndHour = value;
-                            }),
-                            value: _currentEndHour,
-                            selectedTextStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                            textStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 14, color: Color(0xFF4F4F4F)),
-                          ),
-                          Text(
-                            ":",
-                            style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                          ),
-                          NumberPicker(
-                            itemHeight: 40,
-                            itemWidth: 50.0,
-                            minValue: 0,
-                            maxValue: 59,
-                            onChanged: (value) => setState(() {
-                              _currentEndMinute = value;
-                            }),
-                            value: _currentEndMinute,
-                            textMapper: (numberText) {
-                              switch(numberText){
-                                case "0": return "00";
-                                case "1": return "01";
-                                case "2": return "02";
-                                case "3": return "03";
-                                case "4": return "04";
-                                case "5": return "05";
-                                case "6": return "06";
-                                case "7": return "07";
-                                case "8": return "08";
-                                case "9": return "09";
-                                default: return numberText;
-                              }
-                            },
-                            selectedTextStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 20, color: Colors.black),
-                            textStyle: TextStyle(fontFamily: 'Glory-Semi', fontSize: 14, color: Color(0xFF4F4F4F)),
-                          ),
-                        ],
+                      child: (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null ? TimePicker(
+                          context, _currentStartHour, _currentStartMinute, _currentEndHour, _currentEndMinute,
+                              (value){setState(() {_currentStartHour = value;});},
+                              (value){setState(() {_currentStartMinute = value;});},
+                              (value){setState(() {_currentEndHour = value;});},
+                              (value){setState(() {_currentEndMinute = value;});}
+                      ) : TimePicker(
+                          context, _currentStartHour, _currentStartMinute, _currentEndHour, _currentEndMinute,
+                              (value){},
+                              (value){},
+                              (value){},
+                              (value){}
                       ),
                     ),
                     Padding(
@@ -271,28 +239,28 @@ class _AddCoursePageState extends State<AddCoursePage> {
                         children: [
                           Text(
                             AppLocalizations.of(context)?.credits ?? 'Credits:',
-                            style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
+                            style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
                           ),
                           TextButton(
-                            onPressed: () => setState(() {
+                            onPressed: () => (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null ? setState(() {
                               _currentCreditsValue--;
-                            }),
+                            }) : (){},
                             child: Text(
                               "-",
-                              style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 30, color: Colors.black),
+                              style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                             ),
                           ),
                           Text(
                             _currentCreditsValue.toString(),
-                            style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 30, color: Colors.black),
+                            style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                           ),
                           TextButton(
-                            onPressed: () => setState(() {
+                            onPressed: () => (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null ? setState(() {
                               _currentCreditsValue++;
-                            }),
+                            }) : (){},
                             child: Text(
                               "+",
-                              style: TextStyle(fontFamily: 'Glory-Semi', fontSize: 30, color: Colors.black),
+                              style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                             ),
                           ),
                         ],
@@ -306,14 +274,63 @@ class _AddCoursePageState extends State<AddCoursePage> {
     );
   }
 
-  void _saveCourse(BuildContext context){
-    var course = CourseData(courseCode: _courseCodeTextController.text,
+  void _saveCourse(BuildContext context) async {
+    var localUserRole = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
+    var saveCourse;
+    if(selectedCourse != null){
+      if(localUserRole != null && _localName != null){
+        if(localUserRole == Roles.instance.teacher){
+          if(selectedCourse?.teachers == null){
+            saveCourse = CourseData(
+                id: selectedCourse!.id,
+                name: _courseNameTextController.text,
+                credits: _currentCreditsValue,
+                time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
+                courseCode: _courseCodeTextController.text,
+                teachers: [_localName!]
+            );
+          } else {
+            selectedCourse?.teachers?.add(_localName!);
+            saveCourse = CourseData(
+                id: selectedCourse!.id,
+                name: _courseNameTextController.text,
+                credits: _currentCreditsValue,
+                time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
+                courseCode: _courseCodeTextController.text,
+                teachers: selectedCourse!.teachers
+            );
+          }
+          BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
+        } else {
+          saveCourse = CourseData(
+              id: selectedCourse!.id,
+              name: _courseNameTextController.text,
+              credits: _currentCreditsValue,
+              time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
+              courseCode: _courseCodeTextController.text
+          );
+          BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
+        }
+      }
+    } else {
+      var course = CourseData(
+          courseCode: _courseCodeTextController.text,
           name: _courseNameTextController.text,
           credits: _currentCreditsValue,
-          time: "$_currentDayValue $_currentStartHour:$_currentStartMinute-$_currentEndHour:$_currentEndMinute");
-    BlocProvider.of<CoursesCubit>(context).createCourse(course);
+          time: "$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}");
+      if(localUserRole != null && _localName != null && _localUsername != null){
+        if(localUserRole == Roles.instance.teacher){
+          saveCourse = course.copyWith(teachers: [_localName!]);
+          BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, saveCourse);
+        } else {
+          BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, course);
+        }
+      }
+    }
+
     _courseNameTextController.text = '';
     _courseCodeTextController.text = '';
+    _currentDayValue = Days.instance.days[0];
     _currentCreditsValue = 0;
     _currentStartHour = 8;
     _currentStartMinute = 15;
@@ -321,36 +338,8 @@ class _AddCoursePageState extends State<AddCoursePage> {
     _currentEndMinute = 0;
   }
 
-  Future<void> _showSelectCourseDialog() async {
-    BlocProvider.of<CoursesCubit>(context)..getLocalCourses();
-    var _selectedCourse = await showDialog<CourseData>(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return BlocBuilder<CoursesCubit, CoursesState>(
-              builder: (context, state){
-                if(state is ListCoursesSuccess){
-                  //print(state.courses);
-                  return SimpleDialog(
-                    children: state.courses.map((course) =>
-                          SimpleDialogOption(
-                              child: Text(
-                                course.name,
-                                style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black),
-                              ),
-                            onPressed: () => Navigator.pop(context, course),
-                          )
-                      ).toList(),
-                  );
-                } else if(state is ListCoursesFailure){
-                  return Center(child: Text(state.exception.toString()));
-                } else {
-                  return LoadingView();
-                }
-              },
-          );
-      },
-    );
+  void _showSelectCourseDialog(List<CourseData> courses) async {
+    var _selectedCourse = await Navigator.pushNamed(context, 'searchCourse', arguments: courses) as CourseData?;
 
     if(_selectedCourse != null){
       setState(() {
@@ -362,8 +351,8 @@ class _AddCoursePageState extends State<AddCoursePage> {
         _currentStartMinute = int.parse(_selectedCourse.time.split(" ")[1].split("-")[0].split(":")[1]);
         _currentEndHour = int.parse(_selectedCourse.time.split(" ")[1].split("-")[1].split(":")[0]);
         _currentEndMinute = int.parse(_selectedCourse.time.split(" ")[1].split("-")[1].split(":")[1]);
+        selectedCourse = _selectedCourse;
       });
     }
-
   }
 }

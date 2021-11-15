@@ -1,8 +1,14 @@
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_flutter/amplify.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_collegeapp/bloc/users/user_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
+import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
+import 'package:flutter_collegeapp/models/ModelProvider.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -19,16 +25,30 @@ class _SignUpPageState extends State<SignUpPage> {
   var _confirmPasswordController = TextEditingController();
   var _emailController = TextEditingController();
   var _confirmController = TextEditingController();
-  var _role = "STUDENT";
+  var _role = Roles.instance.student;
   var _actualSemesterController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   bool isSignUpComplete = false;
+  bool _loading = false;
+  bool _passwordVisible = false;
+  bool _confirmPasswordVisible = false;
 
+  @override
+  void dispose(){
+    _userNameController.dispose();
+    _passwordController.dispose();
+    _nameController.dispose();
+    _confirmPasswordController.dispose();
+    _confirmController.dispose();
+    _actualSemesterController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: header(context, isMenu: false),
+      appBar: Header(context, isMenu: false),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30.0),
@@ -39,81 +59,99 @@ class _SignUpPageState extends State<SignUpPage> {
               children: [
                 TextFormField(
                   controller: _nameController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
                   keyboardType: TextInputType.name,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
-                      hintText: "Name",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
+                      hintText: AppLocalizations.of(context)?.name ?? "Name",
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
+                          borderSide: BorderSide(color: Resources.customColors.cursorGreen)
                       )
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                     }
                     return null;
                   },
                 ),
                 TextFormField(
                   controller: _userNameController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
                       hintText: AppLocalizations.of(context)?.username ?? "Username",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
+                          borderSide: BorderSide(color: Resources.customColors.cursorGreen)
                       )
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                     }
                     return null;
                   },
                 ),
                 TextFormField(
                   controller: _passwordController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
                   keyboardType: TextInputType.visiblePassword,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  obscureText: !_passwordVisible,
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
-                      hintText: AppLocalizations.of(context)?.password ?? "Password",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
-                      focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
-                      )
+                    hintText: AppLocalizations.of(context)?.password ?? "Password",
+                    hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
+                    focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Resources.customColors.cursorGreen)
+                    ),
+                    suffix: IconButton(
+                      icon: _passwordVisible ? Icon(Icons.visibility_off) : Icon(Icons.visibility),
+                      onPressed: (){
+                        setState(() {
+                          _passwordVisible = !_passwordVisible;
+                        });
+                      },
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                     }
                     return null;
                   },
                 ),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
                   keyboardType: TextInputType.visiblePassword,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  obscureText: !_confirmPasswordVisible,
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
-                      hintText: "Confirm password",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
-                      focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
-                      )
+                    hintText: AppLocalizations.of(context)?.confirm_password ?? "Confirm password",
+                    hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
+                    focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color: Resources.customColors.cursorGreen)
+                    ),
+                    suffix: IconButton(
+                      icon: _confirmPasswordVisible ? Icon(Icons.visibility_off) : Icon(Icons.visibility),
+                      onPressed: (){
+                        setState(() {
+                          _confirmPasswordVisible = !_confirmPasswordVisible;
+                        });
+                      },
+                    ),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                     } else if(value != _passwordController.text){
-                      return 'Password and confirm password does not match!';
+                      return AppLocalizations.of(context)?.not_match ?? 'Password and confirm password does not match!';
                     }
                     return null;
                   },
@@ -122,16 +160,16 @@ class _SignUpPageState extends State<SignUpPage> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Role:',
-                      style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24, color: Color(0xFF828282)),
+                      '${AppLocalizations.of(context)?.role ?? 'Role'}:',
+                      style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24, color: Color(0xFF828282)),
                     ),
                     DropdownButton<String>(
                       value: _role,
-                      items: ["STUDENT", "TEACHER"].map<DropdownMenuItem<String>>((String value) {
+                      items: Roles.instance.values.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
                             value: value, child: Text(
                           value.toString(),
-                          style: TextStyle(fontFamily: "Glory", fontSize: 20, color: Colors.black),
+                          style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
                         ));
                       }).toList(),
                       onChanged: (String? newValue){
@@ -143,31 +181,33 @@ class _SignUpPageState extends State<SignUpPage> {
                   ],
                 ),
                 Container(
-                  width: _role == "STUDENT" ? MediaQuery.of(context).size.width : 0,
                   child: Row(
                     children: [
                       Text(
-                        'Actual semester:',
-                        style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24, color: Color(0xFF828282)),
+                        '${AppLocalizations.of(context)?.actual_semester ?? 'Actual semester'}:',
+                        style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24, color: Color(0xFF828282)),
                       ),
                       Flexible(
-                        child: TextFormField(
-                          controller: _actualSemesterController,
-                          cursorColor: Color(0xFFB4E7B6),
-                          cursorHeight: 24,
-                          keyboardType: TextInputType.number,
-                          style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
-                          decoration: InputDecoration(
-                              focusedBorder: UnderlineInputBorder(
-                                  borderSide: BorderSide(color: Color(0xFFB4E7B6))
-                              )
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                          child: TextFormField(
+                            controller: _actualSemesterController,
+                            cursorColor: Resources.customColors.cursorGreen,
+                            cursorHeight: 24,
+                            keyboardType: TextInputType.number,
+                            style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
+                            decoration: InputDecoration(
+                                focusedBorder: UnderlineInputBorder(
+                                    borderSide: BorderSide(color: Resources.customColors.cursorGreen)
+                                )
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return AppLocalizations.of(context)?.empty_field ?? 'Please add a value';
+                              }
+                              return null;
+                            },
                           ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Please add a value';
-                            }
-                            return null;
-                          },
                         ),
                       )
                     ],
@@ -175,50 +215,53 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 TextFormField(
                   controller: _emailController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
                   keyboardType: TextInputType.emailAddress,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
-                      hintText: "Email address",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
+                      hintText: AppLocalizations.of(context)?.email ?? "Email address",
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
+                          borderSide: BorderSide(color: Resources.customColors.cursorGreen)
                       )
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter some text';
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
                     }
                     return null;
                   },
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 10.0),
-                  child: MaterialButton(
+                  child: _loading ? CircularProgressIndicator(color: Colors.black) : MaterialButton(
                       onPressed: (){
                         if (_formKey.currentState!.validate()){
+                          setState(() {
+                            _loading = !_loading;
+                          });
                           _signUp();
                         }
                       },
-                      color: Color(0xFFB4E7B6),
+                      color: Resources.customColors.cursorGreen,
                       child: Text(
-                          "SEND CONFIRMATION CODE",
-                          style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24)
+                          AppLocalizations.of(context)?.signup.toUpperCase() ?? "SIGN UP",
+                          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24)
                       )
                   ),
                 ),
                 TextFormField(
                   controller: _confirmController,
-                  cursorColor: Color(0xFFB4E7B6),
+                  cursorColor: Resources.customColors.cursorGreen,
                   cursorHeight: 24,
                   keyboardType: TextInputType.number,
-                  style: TextStyle(fontFamily: "Glory", fontSize: 24, color: Colors.black),
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                   decoration: InputDecoration(
-                      hintText: "Confirmation code",
-                      hintStyle: TextStyle(fontFamily: "Glory-Semi", fontSize: 20, color: Color(0xFF828282)),
+                      hintText: AppLocalizations.of(context)?.confirmation_code ?? "Confirmation code",
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
                       focusedBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(color: Color(0xFFB4E7B6))
+                          borderSide: BorderSide(color: Resources.customColors.cursorGreen)
                       )
                   ),
                 ),
@@ -227,13 +270,13 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: MaterialButton(
                       onPressed: (){
                         if (_formKey.currentState!.validate()){
-                          _sendConfirmationCode();
+                          _confirmSignUp();
                         }
                       },
                       color: Color(0xFFD7FFD9),
                       child: Text(
-                          AppLocalizations.of(context)?.signup.toUpperCase() ?? "SIGN UP",
-                          style: TextStyle(fontFamily: "Glory-Semi", fontSize: 24)
+                          AppLocalizations.of(context)?.send_confirmtion_code.toUpperCase() ?? "SEND",
+                          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24)
                       )
                   ),
                 )
@@ -245,16 +288,23 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 
-  void _sendConfirmationCode() async {
+  void _confirmSignUp() async {
     try {
       SignUpResult res = await Amplify.Auth.confirmSignUp(
           username: _userNameController.text.trim(),
           confirmationCode: _confirmController.text.trim()
       );
       if(res.isSignUpComplete){
-        LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, res.isSignUpComplete);
-        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_USER_NAME, _userNameController.text.trim());
-        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, _role.trim());
+        await LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, res.isSignUpComplete);
+        await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_USER_NAME, _userNameController.text.trim());
+        await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, _role.trim());
+        var user = UserData(
+            username: _userNameController.text.trim(),
+            role: _role.trim(),
+            name: _nameController.text.trim(),
+            actualSemester: int.parse(_actualSemesterController.text.trim())
+        );
+        BlocProvider.of<UsersCubit>(context)..createUser(user);
         Navigator.pushNamed(context, 'home');
       }
     } on AuthException catch (e) {
@@ -268,21 +318,22 @@ class _SignUpPageState extends State<SignUpPage> {
         'email': _emailController.text.trim(),
         'custom:role': _role,
       };
-      SignUpResult res = await Amplify.Auth.signUp(
+      SignUpResult result = await Amplify.Auth.signUp(
           username: _userNameController.text.trim(),
           password: _passwordController.text.trim(),
           options: CognitoSignUpOptions(
               userAttributes: userAttributes
           )
       );
-      if(res.isSignUpComplete){
-        LocalStorage.localStorage.saveBool(LocalStorage.KEY_IS_SIGNED_IN, res.isSignUpComplete);
-        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_USER_NAME, _userNameController.text.trim());
-        LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, _role.trim());
-        Navigator.pushNamed(context, 'home');
-      }
+      setState(() {
+        _loading = false;
+      });
+      print(result);
     } on AuthException catch (e) {
-      print(e.message);
+      setState(() {
+        _loading = false;
+      });
+      showErrorAlert(e.message, context);
     }
   }
 }
