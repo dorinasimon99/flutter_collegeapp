@@ -49,46 +49,50 @@ class _LessonsListState extends State<LessonsList> {
     return Scaffold(
       appBar: Header(context, isMenu: false),
       bottomNavigationBar: HomeButton(context),
-      body: Column(
-        children: [
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  "${course?.name} ${AppLocalizations.of(context)?.lessons ?? 'Lessons'}",
-                  style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 35),
+      body: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 10.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Flexible(
+                  child: Text(
+                    "${course?.name} ${AppLocalizations.of(context)?.lessons ?? 'Lessons'}",
+                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 35),
+                  ),
                 ),
-              ),
-              localRole != null && localRole == Roles.instance.student ? Container() : TextButton(
-                onPressed: () => Navigator.pushNamed(context, 'addLesson', arguments: [UserCourse(name: localName!, courseCode: course!.courseCode, username: localUser!), null]),
-                child: Text(
-                  "+",
-                  style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
-                ),
-              )
-            ],
-          ),
-          BlocBuilder<LessonsCubit, LessonsState>(
-              builder: (context, state) {
-                if (state is ListCourseLessonsSuccess) {
-                  if(getDataDone && state.lessons.isNotEmpty){
-                    return ListView(
-                      shrinkWrap: true,
-                      children: state.lessons
-                          .map((lesson) => LessonItem(lesson: lesson, localUser: localUser))
-                          .toList(),
-                    );
-                  } else{
-                    return Text(
-                        AppLocalizations.of(context)?.no_results ?? "No results"
-                    );
-                  }
-                } else if(state is ListCourseLessonsFailure){
-                  return Center(child: Text(state.exception.toString()));
-                } else return LoadingView();
-              }
-          ),
-        ],
+                localRole != null && localRole == Roles.instance.student ? Container() : TextButton(
+                  onPressed: () => Navigator.pushNamed(context, 'addLesson', arguments: [UserCourse(name: localName!, courseCode: course!.courseCode, username: localUser!), null]),
+                  child: Text(
+                    "+",
+                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                  ),
+                )
+              ],
+            ),
+            BlocBuilder<LessonsCubit, LessonsState>(
+                builder: (context, state) {
+                  if (state is ListCourseLessonsSuccess) {
+                    if(getDataDone && state.lessons.isNotEmpty){
+                      return ListView(
+                        shrinkWrap: true,
+                        children: state.lessons
+                            .map((lesson) => LessonItem(lesson: lesson, localUser: localUser))
+                            .toList(),
+                      );
+                    } else{
+                      return Text(
+                          AppLocalizations.of(context)?.no_results ?? "No results"
+                      );
+                    }
+                  } else if(state is ListCourseLessonsFailure){
+                    return Center(child: Text(state.exception.toString()));
+                  } else return LoadingView();
+                }
+            ),
+          ],
+        ),
       ),
     );
   }
