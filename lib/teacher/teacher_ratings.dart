@@ -29,17 +29,24 @@ class TeacherRatingPage extends StatefulWidget {
 class _TeacherRatingPageState extends State<TeacherRatingPage> {
   late String teacherName;
   String? _role;
+  bool getDataDone = false;
   ImageProvider backgroundImage = AssetImage('assets/avatar.png');
 
   void _getUser() async {
-    _role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
+    var role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
+    setState(() {
+      _role = role;
+      getDataDone = true;
+    });
     BlocProvider.of<UsersCubit>(context)..getUserByName(teacherName);
   }
 
   @override
   Widget build(BuildContext context) {
     teacherName = ModalRoute.of(context)!.settings.arguments as String;
-    _getUser();
+    if(!getDataDone){
+      _getUser();
+    }
     return Scaffold(
       appBar: Header(context, isMenu: false),
       bottomNavigationBar: HomeButton(context),
@@ -124,7 +131,7 @@ class _TeacherCoursesTabViewState extends State<TeacherCoursesTabView> {
               AppLocalizations.of(context)?.ratings ?? 'Ratings',
               style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
             ),
-            widget.role != null && widget.role == Roles.instance.student ? TextButton(
+            widget.role == Roles.instance.student ? TextButton(
               onPressed: () {
                 if(_selectedCourseCode != null){
                   Navigator.pushNamed(context, 'addRating', arguments: UserCourse(name: widget.teacherName!, username: "", courseCode: _selectedCourseCode!));
