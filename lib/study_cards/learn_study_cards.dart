@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/bloc/cards/card_cubit.dart';
-import 'package:flutter_collegeapp/bloc/lessons/lesson_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
+import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/models/CardData.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -18,22 +18,40 @@ class LearnStudyCardsPage extends StatefulWidget {
 
 class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
   CardData? card;
-  bool? _favorite;
+  bool _favorite = false;
   bool _refresh = false;
+  String? _userName;
 
-  void _setFavorite(bool value){
-    if(_favorite == null){
+  void _getUser() async {
+    var userName = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
+    setState(() {
+      _userName = userName;
+    });
+  }
+
+  void _setFavorite(CardData cardData){
+    if(cardData.isFavorite?.contains(_userName) == true){
       setState(() {
-        _favorite = value;
+        _favorite = true;
+      });
+    } else {
+      setState(() {
+        _favorite = false;
       });
     }
+  }
+
+  @override
+  void initState(){
+    super.initState();
+    _getUser();
   }
 
   @override
   Widget build(BuildContext context) {
     if(!_refresh){
       card = ModalRoute.of(context)?.settings.arguments as CardData;
-      //_setFavorite(card!.isFavorite);
+      _setFavorite(card!);
     }
     return Scaffold(
       appBar: Header(context, isMenu: false),
@@ -72,11 +90,12 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                 IconButton(
                   onPressed: (){
                     setState(() {
-                      _favorite = !_favorite!;
+                      _favorite = !_favorite;
+                      _refresh = true;
                     });
                     _updateFavorites();
                   },
-                  icon: Icon(_favorite ?? false ? Icons.favorite : Icons.favorite_border, size: 40, color: Resources.customColors.cardGreen),
+                  icon: Icon(_favorite ? Icons.favorite : Icons.favorite_border, size: 40, color: Resources.customColors.cardGreen),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -105,11 +124,9 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(20.0),
                                     child: SingleChildScrollView(
-                                      child: Flexible(
-                                        child: Text(
+                                      child: Text(
                                           card!.questions.elementAt(index),
                                           style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24),
-                                        ),
                                       ),
                                     ),
                                   ),
@@ -121,11 +138,9 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                                   child: Padding(
                                     padding: const EdgeInsets.all(20.0),
                                     child: SingleChildScrollView(
-                                      child: Flexible(
-                                        child: Text(
+                                      child: Text(
                                           card!.answers.elementAt(index),
                                           style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24),
-                                        ),
                                       ),
                                     ),
                                   ),
@@ -157,8 +172,27 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
   }
 
   void _updateFavorites() async {
-    CardData? saveCard = card?.copyWith();
-    BlocProvider.of<CardsCubit>(context).updateCard(saveCard);
+    if(card != null){
+      List<String> favorites = [];
+      favorites.addAll(card!.isFavorite!);
+      if(_favorite){
+        if(!favorites.contains(_userName)){
+          favorites.add(_userName!);
+        }
+      } else {
+        favorites.remove(_userName);
+      }
+      CardData saveCard = CardData(
+          id: card?.id,
+          title: card?.title,
+          questions: card!.questions,
+          answers: card!.answers,
+          courseCode: card!.courseCode,
+          courseName: card!.courseName,
+          isFavorite: favorites
+      );
+      BlocProvider.of<CardsCubit>(context).updateCard(saveCard);
+    }
   }
 }
 

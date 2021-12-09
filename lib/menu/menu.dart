@@ -60,7 +60,10 @@ class _MenuPageState extends State<MenuPage> {
                                 if (state is GetUserSuccess) {
                                   if (state.user.avatar != null) {
                                     setState(() {
-                                      backgroundImage = FileImage(File(state.user.avatar!));
+                                      File image = File(state.user.avatar!);
+                                      if(image.existsSync()){
+                                        backgroundImage = FileImage(image);
+                                      }
                                       user = state.user;
                                     });
                                   } else {
@@ -74,7 +77,10 @@ class _MenuPageState extends State<MenuPage> {
                                 } else if(state is UpdateUserSuccess){
                                   if (state.user.avatar != null) {
                                     setState(() {
-                                      backgroundImage = FileImage(File(state.user.avatar!));
+                                      File image = File(state.user.avatar!);
+                                      if(image.existsSync()){
+                                        backgroundImage = FileImage(image);
+                                      }
                                       user = state.user;
                                     });
                                   } else {
@@ -93,7 +99,7 @@ class _MenuPageState extends State<MenuPage> {
                                     Padding(
                                       padding: const EdgeInsets.only(right: 10.0),
                                       child: CircleAvatar(
-                                        backgroundImage: backgroundImage,
+                                        backgroundImage: backgroundImage ?? AssetImage("assets/avatar.png"),
                                         radius: 40,
                                       ),
                                     ),
