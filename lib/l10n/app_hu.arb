@@ -97,7 +97,7 @@
   "end_before_start": "A befejezés ideje nem lehet a kezdés ideje előtt!",
   "add_questions": "Adj hozzá kérdéseket és válaszokat!",
   "not_same_length": "A kérdések és válaszok száma nem egyezik!",
-  "students": "kurzus hallgatói",
+  "students": "Kurzus hallgatói",
   "student": "Hallgató",
   "teacher": "Tanár"
 }

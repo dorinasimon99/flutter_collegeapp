@@ -115,11 +115,10 @@ class _HomePageState extends State<HomePage> {
   void _saveUser(UserData user) async {
     await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, user.role);
     await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_NAME, user.name);
+    await LocalStorage.localStorage.saveInt(LocalStorage.SIGNED_IN_SEMESTER, user.actualSemester);
     setState(() {
         semester = user.actualSemester;
         name = user.name;
     });
-    await LocalStorage.localStorage.saveInt(LocalStorage.SIGNED_IN_SEMESTER, user.actualSemester);
-
   }
 }

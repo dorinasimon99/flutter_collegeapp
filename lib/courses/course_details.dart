@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/bloc/courses/courses_cubit.dart';
-import 'package:flutter_collegeapp/bloc/lessons/lesson_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/bloc/teachers/teachers_cubit.dart';
 import 'package:flutter_collegeapp/bloc/todos/todos_cubit.dart';
@@ -25,18 +24,22 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
   String? localUserRole;
   String? localUsername;
   int? localSemester;
+  List<TodoData>? _todos;
 
   void _getLocalUser() async {
     var name = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
     var role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
     var semester = await LocalStorage.localStorage.readInt(LocalStorage.SIGNED_IN_SEMESTER);
-    if(role != null && name != null && semester != null){
+    if(role != null && name != null){
       setState(() {
         localUserRole = role;
         localName = name;
         localSemester = semester;
       });
-
+      if(role == Roles.instance.student){
+        BlocProvider.of<TeachersCubit>(context)..getCourseTeachers(course.courseCode);
+      }
+      BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
     }
   }
 
@@ -51,13 +54,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     List<Object?> args = ModalRoute.of(context)!.settings.arguments as List<Object?>;
     course = args[0] as CourseData;
     localUsername = args[1] as String?;
-    if(localUserRole != null){
-      if(localUserRole == Roles.instance.student){
-        BlocProvider.of<TeachersCubit>(context)..getCourseTeachers(course.courseCode);
-      }
-    } else {
-      debugPrint("Role is null!");
-    }
     return Scaffold(
         appBar: Header(context, isMenu: false),
         bottomNavigationBar: HomeButton(context),
@@ -69,28 +65,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    BlocListener<TodosCubit, TodosState>(
-                      listener: (context, state){
-                        if(state is CreateTodoSuccess){
-                          if(localUserRole != null){
-                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
-                          }
-                        } else if(state is UpdateTodoSuccess){
-                          if(localUserRole != null){
-                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
-                          }
-                        } else if (state is ListLessonTodosSuccess){
-                          BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
-                        } else if(state is CreateTodoFailure){
-                          showErrorAlert(state.exception.toString(), context);
-                        } else if(state is UpdateTodoFailure){
-                          showErrorAlert(state.exception.toString(), context);
-                        } else if (state is ListLessonTodosFailure){
-                          showErrorAlert(state.exception.toString(), context);
-                        }
-                      },
-                      child: Container(),
-                    ),
                     BlocListener<TeachersCubit, TeachersState>(
                       listener: (context, state){
                         if(state is ListTeachersSuccess){
@@ -159,12 +133,12 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                     ) : Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        TextButton(
+                        InkWell(
                           child: Text(
                             '${AppLocalizations.of(context)?.students ?? 'Students'}...',
                             style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                           ),
-                          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => StudentsPage(course: course))),
+                          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => StudentsPage(course: course))),
                         ),
 
                       ],
@@ -189,14 +163,33 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         )
                       ],
                     ),
-                    BlocBuilder<TodosCubit, TodosState>(
-                      builder: (context, state) {
-                        if(state is ListTodosSuccess){
-                          return TodosList(todos: state.todos);
+                    BlocListener<TodosCubit, TodosState>(
+                      listener: (context, state){
+                        if(state is CreateTodoSuccess){
+                          if(localUserRole != null){
+                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
+                          }
+                        } else if(state is UpdateTodoSuccess){
+                          if(localUserRole != null){
+                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
+                          }
+                        } /*else if (state is ListLessonTodosSuccess){
+                          BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
+                        }*/ else if(state is CreateTodoFailure){
+                          showErrorAlert(state.exception.toString(), context);
+                        } else if(state is UpdateTodoFailure){
+                          showErrorAlert(state.exception.toString(), context);
+                        } /*else if (state is ListLessonTodosFailure){
+                          showErrorAlert(state.exception.toString(), context);
+                        }*/ else if(state is ListTodosSuccess){
+                          setState(() {
+                            _todos = state.todos;
+                          });
                         } else if(state is ListTodosFailure){
-                          return Center(child: Text(state.exception.toString()));
-                        } else return LoadingView();
+                          showErrorAlert(state.exception.toString(), context);
+                        }
                       },
+                      child: _todos != null ? TodosList(todos: _todos!) : Container(),
                     ),
                   ],
                 ),
