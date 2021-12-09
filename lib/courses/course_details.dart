@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_collegeapp/bloc/courses/courses_cubit.dart';
-import 'package:flutter_collegeapp/bloc/courses/courses_repository.dart';
 import 'package:flutter_collegeapp/bloc/lessons/lesson_cubit.dart';
-import 'package:flutter_collegeapp/bloc/usercourses/usercourses_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/bloc/teachers/teachers_cubit.dart';
 import 'package:flutter_collegeapp/bloc/todos/todos_cubit.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/common/roles.dart';
-import 'package:flutter_collegeapp/home/today_lessons_list.dart';
 import 'package:flutter_collegeapp/models/ModelProvider.dart';
+import 'package:flutter_collegeapp/students/students.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 
 import '../app.dart';
@@ -56,26 +54,14 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
     if(localUserRole != null){
       if(localUserRole == Roles.instance.student){
         BlocProvider.of<TeachersCubit>(context)..getCourseTeachers(course.courseCode);
-      } else if(localUserRole == Roles.instance.teacher) {
-        BlocProvider.of<LessonsCubit>(context)..getCourseLessons(course.courseCode);
-      } else {
-        debugPrint("Role is null!");
       }
+    } else {
+      debugPrint("Role is null!");
     }
     return Scaffold(
         appBar: Header(context, isMenu: false),
-        resizeToAvoidBottomInset: false,
         bottomNavigationBar: HomeButton(context),
-        body: RefreshIndicator(
-          onRefresh: (){
-            return Future.delayed(
-              Duration(seconds: 1),
-                (){
-                  setState(() {});
-                }
-            );
-          },
-          child: ListView(
+        body: ListView(
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10.0),
@@ -87,19 +73,11 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                       listener: (context, state){
                         if(state is CreateTodoSuccess){
                           if(localUserRole != null){
-                            if(localUserRole == Roles.instance.teacher){
-                              BlocProvider.of<LessonsCubit>(context)..getCourseLessons(course.courseCode);
-                            } else {
-                              BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
-                            }
+                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
                           }
                         } else if(state is UpdateTodoSuccess){
                           if(localUserRole != null){
-                            if(localUserRole == Roles.instance.teacher){
-                              BlocProvider.of<LessonsCubit>(context)..getCourseLessons(course.courseCode);
-                            } else {
-                              BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
-                            }
+                            BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
                           }
                         } else if (state is ListLessonTodosSuccess){
                           BlocProvider.of<TodosCubit>(context)..getTodos(localUsername, course.courseCode);
@@ -108,20 +86,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         } else if(state is UpdateTodoFailure){
                           showErrorAlert(state.exception.toString(), context);
                         } else if (state is ListLessonTodosFailure){
-                          showErrorAlert(state.exception.toString(), context);
-                        }
-                      },
-                      child: Container(),
-                    ),
-                    BlocListener<LessonsCubit, LessonsState>(
-                      listener: (context, state){
-                        if(state is CreateLessonSuccess){
-                          BlocProvider.of<LessonsCubit>(context)..getCourseLessons(course.courseCode);
-                        } else if(state is CreateLessonFailure){
-                          showErrorAlert(state.exception.toString(), context);
-                        } else if(state is UpdateLessonSuccess){
-                          BlocProvider.of<LessonsCubit>(context)..getCourseLessons(course.courseCode);
-                        } else if(state is UpdateLessonFailure){
                           showErrorAlert(state.exception.toString(), context);
                         }
                       },
@@ -168,27 +132,47 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
                         ],
                       ),
                     ),
-                    Row(
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          InkWell(
+                            child: Text(
+                              '${AppLocalizations.of(context)?.lessons ?? 'Lessons'}...',
+                              style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
+                            ),
+                            onTap: () => Navigator.pushNamed(context, "lessons", arguments: course),
+                          ),
+
+                        ],
+                      ),
+                    ),
+                    localUserRole != null && localUserRole == Roles.instance.student ? Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          localUserRole != null && localUserRole == Roles.instance.student ?
-                          AppLocalizations.of(context)?.teachers ?? 'Teachers' : AppLocalizations.of(context)?.lessons ?? 'Lessons',
+                          AppLocalizations.of(context)?.teachers ?? 'Teachers',
                           style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                         ),
-                        localUserRole != null && localUserRole == Roles.instance.student ? Container() :TextButton(
-                          onPressed: () => Navigator.pushNamed(context, 'addLesson', arguments: [UserCourse(name: localName!, courseCode: course.courseCode, username: localUsername!), null]),
+                      ],
+                    ) : Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        TextButton(
                           child: Text(
-                            "+",
-                            style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                            '${AppLocalizations.of(context)?.students ?? 'Students'}...',
+                            style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                           ),
-                        )
+                          onPressed: () => Navigator.of(context).push(MaterialPageRoute(builder: (context) => StudentsPage(course: course))),
+                        ),
+
                       ],
                     ),
                     localUserRole != null && localUserRole == Roles.instance.student ? Container(
                       height: 150,
                       child: TeachersList(courseCode: course.courseCode),
-                    ) : LessonsList(localUser: localUsername),
+                    ) : Container(),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -219,7 +203,6 @@ class _CourseDetailsPageState extends State<CourseDetailsPage> {
               ),
             ],
           ),
-        ),
       );
   }
 
@@ -280,30 +263,21 @@ class _DeleteCourseDialogState extends State<DeleteCourseDialog> {
         ],
       ),
       actions: <Widget>[
-        Column(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            TextButton(
-              child: Text(
-                AppLocalizations.of(context)?.just_delete.toUpperCase() ?? "JUST DELETE",
-                style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
-              ),
-              onPressed: () {
-                if(widget.localName != null){
-                  BlocProvider.of<CoursesCubit>(context)..deleteCourse(widget.localName!, widget.course!);
-                  Navigator.of(context).pop();
-                }
-              },
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
               children: [
                 TextButton(
                   child: Text(
-                    AppLocalizations.of(context)?.cancel.toUpperCase() ?? "CANCEL",
+                    AppLocalizations.of(context)?.just_delete.toUpperCase() ?? "JUST DELETE",
                     style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
                   ),
                   onPressed: () {
-                    Navigator.of(context).pop();
+                    if(widget.localName != null){
+                      BlocProvider.of<CoursesCubit>(context)..deleteCourse(widget.localName!, widget.course!);
+                      Navigator.of(context).pop();
+                    }
                   },
                 ),
                 TextButton(
@@ -320,8 +294,17 @@ class _DeleteCourseDialogState extends State<DeleteCourseDialog> {
                     }
                   },
                 ),
+                TextButton(
+                  child: Text(
+                    AppLocalizations.of(context)?.cancel.toUpperCase() ?? "CANCEL",
+                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+                  ),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
               ],
-            )
+            ),
           ],
         ),
       ],
@@ -435,65 +418,44 @@ class _TodoItemState extends State<TodoItem> {
 
   @override
   Widget build(BuildContext context) {
-    return widget.todo != null ? Card(
-      color: Resources.customColors.todoBackGround,
-      child: Padding(
-        padding: const EdgeInsets.all(10.0),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Flexible(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.todo!.name,
-                    style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
-                  ),
-                  widget.todo!.deadline != null ? Text(
-                    "${AppLocalizations.of(context)?.deadline ?? "Deadline:"} ${widget.todo!.deadline}",
-                    style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
-                  ) : Container()
-                ],
+    return widget.todo != null ? Padding(
+      padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 10.0),
+      child: Card(
+        color: Resources.customColors.todoBackGround,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      widget.todo!.name,
+                      style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
+                    ),
+                    widget.todo!.deadline != null ? Text(
+                      "${AppLocalizations.of(context)?.deadline ?? "Deadline:"} ${widget.todo!.deadline}",
+                      style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
+                    ) : Container()
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                setState(() {
-                  done = !done;
-                });
-                TodoData updated = widget.todo!.copyWith(done: true);
-                BlocProvider.of<TodosCubit>(context)..updateTodo(updated);
-              },
-              icon: done ? Image.asset('assets/checkbox_on.png') : Image.asset('assets/checkbox_off.png'),
-            ),
-          ],
+              IconButton(
+                onPressed: () {
+                  setState(() {
+                    done = !done;
+                  });
+                  TodoData updated = widget.todo!.copyWith(done: true);
+                  BlocProvider.of<TodosCubit>(context)..updateTodo(updated);
+                },
+                icon: done ? Image.asset('assets/checkbox_on.png') : Image.asset('assets/checkbox_off.png'),
+              ),
+            ],
+          ),
         ),
       ),
     ) : Container();
-  }
-}
-
-class LessonsList extends StatelessWidget {
-  final String? localUser;
-  LessonsList({this.localUser});
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<LessonsCubit, LessonsState>(
-      builder: (context, state) {
-        if (state is ListCourseLessonsSuccess) {
-          return ListView(
-            shrinkWrap: true,
-            physics: NeverScrollableScrollPhysics(),
-            children: state.lessons
-                .map((lesson) => LessonItem(lesson: lesson, localUser: localUser))
-                .toList(),
-          );
-        } else if(state is ListCourseLessonsFailure){
-          return Center(child: Text(state.exception.toString()));
-        } else return LoadingView();
-      }
-    );
   }
 }

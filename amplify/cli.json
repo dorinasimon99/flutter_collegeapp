@@ -1,27 +1,27 @@
 {
-  "features": {
-    "graphqltransformer": {
-      "addmissingownerfields": true,
-      "validatetypenamereservedwords": true,
-      "useexperimentalpipelinedtransformer": false,
-      "enableiterativegsiupdates": true,
-      "secondarykeyasgsi": true
-    },
-    "frontend-ios": {
-      "enablexcodeintegration": true
-    },
-    "auth": {
-      "enablecaseinsensitivity": true
-    },
-    "codegen": {
-      "useappsyncmodelgenplugin": true,
-      "enableDartNullSafety": true
-    },
-    "appsync": {
-      "generategraphqlpermissions": true
-    },
-    "project": {
-      "overrides": true
+    "features": {
+        "graphqltransformer": {
+            "addmissingownerfields": true,
+            "validatetypenamereservedwords": true,
+            "useexperimentalpipelinedtransformer": false,
+            "enableiterativegsiupdates": true,
+            "secondarykeyasgsi": true
+        },
+        "frontend-ios": {
+            "enablexcodeintegration": true
+        },
+        "auth": {
+            "enablecaseinsensitivity": true
+        },
+        "codegen": {
+            "useappsyncmodelgenplugin": true,
+            "enableDartNullSafety": true
+        },
+        "appsync": {
+            "generategraphqlpermissions": true
+        },
+        "project": {
+            "overrides": true
+        }
     }
-  }
 }

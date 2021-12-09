@@ -160,13 +160,13 @@ class LessonsCubit extends Cubit<LessonsState> {
     }
   }
 
-  void getTodayLessons(String name, int actualSemester, String date) async {
+  void getTodayLessons(String username, int? actualSemester, String date) async {
     if (state is ListTodayLessonsSuccess == false) {
       emit(LoadingLessons());
     }
 
     try {
-      final lessons = await _lessonsRepo.getTodayLessons(name, actualSemester, date);
+      final lessons = await _lessonsRepo.getTodayLessons(username, actualSemester, date);
       emit(ListTodayLessonsSuccess(lessons: lessons));
     } catch (e) {
       emit(ListTodayLessonsFailure(exception: e));

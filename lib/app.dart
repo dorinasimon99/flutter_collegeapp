@@ -4,7 +4,6 @@ import 'package:amplify_api/amplify_api.dart';
 import 'package:amplify_auth_cognito/amplify_auth_cognito.dart';
 import 'package:amplify_datastore/amplify_datastore.dart';
 import 'package:amplify_flutter/amplify.dart';
-import 'package:amplify_storage_s3/amplify_storage_s3.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_collegeapp/courses/add_course.dart';
 import 'package:flutter_collegeapp/courses/course_details.dart';
@@ -13,6 +12,7 @@ import 'package:flutter_collegeapp/courses/search_courses.dart';
 import 'package:flutter_collegeapp/home/home.dart';
 import 'package:flutter_collegeapp/lesson/add_lesson.dart';
 import 'package:flutter_collegeapp/lesson/lesson.dart';
+import 'package:flutter_collegeapp/lesson/lessons_list.dart';
 import 'package:flutter_collegeapp/menu/menu.dart';
 import 'package:flutter_collegeapp/models/ModelProvider.dart';
 import 'package:flutter_collegeapp/profile/profile.dart';
@@ -21,6 +21,7 @@ import 'package:flutter_collegeapp/quiz/quizzes.dart';
 import 'package:flutter_collegeapp/root/root.dart';
 import 'package:flutter_collegeapp/sign_up/sign_up.dart';
 import 'package:flutter_collegeapp/statistics/statistics.dart';
+import 'package:flutter_collegeapp/students/students.dart';
 import 'package:flutter_collegeapp/study_cards/add_card.dart';
 import 'package:flutter_collegeapp/study_cards/learn_study_cards.dart';
 import 'package:flutter_collegeapp/study_cards/study_cards.dart';
@@ -45,7 +46,6 @@ class _AppState extends State<App> {
   final AmplifyAuthCognito _authPlugin = AmplifyAuthCognito();
   final AmplifyAPI _apiPlugin = AmplifyAPI();
   final AmplifyDataStore _datastorePlugin = AmplifyDataStore(modelProvider: ModelProvider.instance);
-  final AmplifyStorageS3 _storagePlugin = AmplifyStorageS3();
 
   @override
   void initState(){
@@ -86,7 +86,9 @@ class _AppState extends State<App> {
         'addLesson': (context) => AddLessonPage(),
         'profile': (context) => ProfilePage(),
         'searchCourse': (context) => SearchCoursesPage(),
-        'quizzes': (context) => QuizzesPage()
+        'quizzes': (context) => QuizzesPage(),
+        'lessons': (context) => LessonsList(),
+        'students': (context) => StudentsPage()
       },
       home: _amplifyConfigured ? RootPage() : LoadingView()
     );
@@ -106,7 +108,6 @@ class _AppState extends State<App> {
       await Amplify.addPlugin(_authPlugin);
       await Amplify.addPlugin(_datastorePlugin);
       await Amplify.addPlugin(_apiPlugin);
-      await Amplify.addPlugin(_storagePlugin);
       await Amplify.configure(amplifyconfig);
     } catch(e){
       print('An error occurred while configuring Amplify: $e');

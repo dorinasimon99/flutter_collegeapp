@@ -13,7 +13,11 @@
 * permissions and limitations under the License.
 */
 
-// ignore_for_file: public_member_api_docs
+// NOTE: This file is generated and may not follow lint rules defined in your app
+// Generated files can be excluded from analysis in analysis_options.yaml
+// For more info, see: https://dart.dev/guides/language/analysis-options#excluding-code-from-analysis
+
+// ignore_for_file: public_member_api_docs, file_names, unnecessary_new, prefer_if_null_operators, prefer_const_constructors, slash_for_doc_comments, annotate_overrides, non_constant_identifier_names, unnecessary_string_interpolations, prefer_adjacent_string_concatenation, unnecessary_const, dead_code
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:collection/collection.dart';
@@ -30,7 +34,7 @@ class CardData extends Model {
   final List<String>? _answers;
   final String? _courseCode;
   final String? _courseName;
-  final bool? _isFavorite;
+  final List<String>? _isFavorite;
 
   @override
   getInstanceType() => classType;
@@ -76,17 +80,13 @@ class CardData extends Model {
     }
   }
   
-  bool get isFavorite {
-    try {
-      return _isFavorite!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
+  List<String>? get isFavorite {
+    return _isFavorite;
   }
   
-  const CardData._internal({required this.id, title, required questions, required answers, required courseCode, required courseName, required isFavorite}): _title = title, _questions = questions, _answers = answers, _courseCode = courseCode, _courseName = courseName, _isFavorite = isFavorite;
+  const CardData._internal({required this.id, title, required questions, required answers, required courseCode, required courseName, isFavorite}): _title = title, _questions = questions, _answers = answers, _courseCode = courseCode, _courseName = courseName, _isFavorite = isFavorite;
   
-  factory CardData({String? id, String? title, required List<String> questions, required List<String> answers, required String courseCode, required String courseName, required bool isFavorite}) {
+  factory CardData({String? id, String? title, required List<String> questions, required List<String> answers, required String courseCode, required String courseName, List<String>? isFavorite}) {
     return CardData._internal(
       id: id == null ? UUID.getUUID() : id,
       title: title,
@@ -94,7 +94,7 @@ class CardData extends Model {
       answers: answers != null ? List<String>.unmodifiable(answers) : answers,
       courseCode: courseCode,
       courseName: courseName,
-      isFavorite: isFavorite);
+      isFavorite: isFavorite != null ? List<String>.unmodifiable(isFavorite) : isFavorite);
   }
   
   bool equals(Object other) {
@@ -111,7 +111,7 @@ class CardData extends Model {
       DeepCollectionEquality().equals(_answers, other._answers) &&
       _courseCode == other._courseCode &&
       _courseName == other._courseName &&
-      _isFavorite == other._isFavorite;
+      DeepCollectionEquality().equals(_isFavorite, other._isFavorite);
   }
   
   @override
@@ -134,7 +134,7 @@ class CardData extends Model {
     return buffer.toString();
   }
   
-  CardData copyWith({String? id, String? title, List<String>? questions, List<String>? answers, String? courseCode, String? courseName, bool? isFavorite}) {
+  CardData copyWith({String? id, String? title, List<String>? questions, List<String>? answers, String? courseCode, String? courseName, List<String>? isFavorite}) {
     return CardData(
       id: id ?? this.id,
       title: title ?? this.title,
@@ -152,7 +152,7 @@ class CardData extends Model {
       _answers = json['answers']?.cast<String>(),
       _courseCode = json['courseCode'],
       _courseName = json['courseName'],
-      _isFavorite = json['isFavorite'];
+      _isFavorite = json['isFavorite']?.cast<String>();
   
   Map<String, dynamic> toJson() => {
     'id': id, 'title': _title, 'questions': _questions, 'answers': _answers, 'courseCode': _courseCode, 'courseName': _courseName, 'isFavorite': _isFavorite
@@ -216,8 +216,9 @@ class CardData extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: CardData.ISFAVORITE,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.bool)
+      isRequired: false,
+      isArray: true,
+      ofType: ModelFieldType(ModelFieldTypeEnum.collection, ofModelName: describeEnum(ModelFieldTypeEnum.string))
     ));
   });
 }

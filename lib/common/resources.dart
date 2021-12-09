@@ -19,6 +19,7 @@ class CustomColors {
   Color alertRed = Color(0xFFFF5252);
   Color editCardBackground = Color(0xC6F1D463);
   Color snackBarText = Color(0xFF9A3AFF);
+  Color datePickerButtonGreen = Color(0xFF839985);
 }
 
 class CustomTextStyles{

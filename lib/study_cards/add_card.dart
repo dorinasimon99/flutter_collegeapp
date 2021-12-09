@@ -27,11 +27,18 @@ class _AddCardPageState extends State<AddCardPage> {
   bool _editing = false;
   CourseData? _firstValue;
   bool _delete = false;
+  String? _localUser;
 
   @override
   void initState(){
     super.initState();
     _getUser();
+  }
+
+  @override
+  void dispose(){
+    _titleController.dispose();
+    super.dispose();
   }
 
   void _setEditing(CardData _editable){
@@ -52,6 +59,9 @@ class _AddCardPageState extends State<AddCardPage> {
     var localUser = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
     if(localUser != null){
       BlocProvider.of<CoursesCubit>(context)..getUserCourses(localUser);
+      setState(() {
+        _localUser = localUser;
+      });
     }
   }
 
@@ -102,15 +112,26 @@ class _AddCardPageState extends State<AddCardPage> {
                             showSnackBar(context, AppLocalizations.of(context)?.card_created ?? 'Card created', onActionPressed: () => Navigator.pop(context, state.card));
                           } else if(state is UpdateCardFailure){
                             showErrorAlert(state.exception.toString(), context);
+                          } else if(state is DeleteCardSuccess){
+                            Navigator.pop(context);
+                          } else if(state is DeleteCardFailure){
+                            showErrorAlert(state.exception.toString(), context);
                           }
                         },
                         child: IconButton(
                           onPressed: (){
-                            showSnackBar(context, AppLocalizations.of(context)?.card_created ?? 'Card created', onActionPressed: () => Navigator.pop(context, null));//_save();
+                            _save();
                           },
                           icon: Icon(Icons.check, size: 35, color: Colors.black),
                         ),
-                      )
+                      ),
+                      _editing && editCard?.isFavorite?.contains(_localUser) == true ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                        child: IconButton(
+                          onPressed: _deleteCard,
+                          icon: Icon(Icons.delete, size: 35),
+                        ),
+                      ) : Container()
                     ],
                   ),
                 ),
@@ -131,36 +152,43 @@ class _AddCardPageState extends State<AddCardPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 30.0),
-                          child: BlocBuilder<CoursesCubit, CoursesState>(
-                            builder: (context, state) {
-                              if (state is ListUsersCoursesSuccess) {
-                                if (editCard != null && _selectedCourse == null) {
-                                  _firstValue = state.courses.firstWhere((element) => element.courseCode == editCard!.courseCode);
-                                }
-                                return DropdownButton<CourseData>(
-                                  value: _selectedCourse ?? _firstValue,
-                                    items: state.courses.map<DropdownMenuItem<CourseData>>(
-                                      (CourseData value) {
-                                      return DropdownMenuItem<CourseData>(
-                                        value: value,
-                                        child: Text(
-                                        value.name.toString(),
-                                          style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
-                                        )
-                                      );
-                                  }).toList(),
-                                  onChanged: (CourseData? newValue) {
-                                    setState(() {
-                                      _firstValue = null;
-                                      _selectedCourse = newValue!;
-                                    });
-                                  },
-                                );
-                              } else if (state is ListUsersCoursesFailure) {
-                                return Center(child: Text(state.exception.toString()));
-                             } else
-                                return Container();
-                            },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              BlocBuilder<CoursesCubit, CoursesState>(
+                                builder: (context, state) {
+                                  if (state is ListUsersCoursesSuccess) {
+                                    if (editCard != null && _selectedCourse == null) {
+                                      _firstValue = state.courses.firstWhere((element) => element.courseCode == editCard!.courseCode);
+                                    } else if (editCard == null && _selectedCourse == null){
+                                      _firstValue = state.courses[0];
+                                    }
+                                    return DropdownButton<CourseData>(
+                                      value: _selectedCourse ?? _firstValue,
+                                        items: state.courses.map<DropdownMenuItem<CourseData>>(
+                                          (CourseData value) {
+                                          return DropdownMenuItem<CourseData>(
+                                            value: value,
+                                            child: Text(
+                                            value.name.toString(),
+                                              style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                                            )
+                                          );
+                                      }).toList(),
+                                      onChanged: (CourseData? newValue) {
+                                        setState(() {
+                                          _firstValue = null;
+                                          _selectedCourse = newValue!;
+                                        });
+                                      },
+                                    );
+                                  } else if (state is ListUsersCoursesFailure) {
+                                    return Center(child: Text(state.exception.toString()));
+                                 } else
+                                    return Container();
+                                },
+                              ),
+                            ],
                           ),
                         ),
                         Padding(
@@ -171,36 +199,46 @@ class _AddCardPageState extends State<AddCardPage> {
                               itemCount: _cards.length,
                               itemBuilder: (BuildContext context, int index) {
                                 CardItem returnCard;
-                                if (_questions.isNotEmpty && _answers.isNotEmpty && index < _questions.length) {
+                                if (index < _questions.length) {
                                   returnCard = CardItem(index, true, onCardChanged: (newCardContent) {
                                     if (newCardContent.deleted) {
-                                      _cards.removeAt(newCardContent.index);
-                                      _questions.removeAt(newCardContent.index);
-                                      _answers.removeAt(newCardContent.index);
                                       setState(() {
+                                        _cards.removeAt(newCardContent.index);
+                                        if(_questions.length > newCardContent.index){
+                                          _questions.removeAt(newCardContent.index);
+                                        }
+                                        if(_answers.length > newCardContent.index){
+                                          _answers.removeAt(newCardContent.index);
+                                        }
                                         _delete = true;
                                       });
                                     } else {
-                                      _questions[index] = newCardContent.question;
-                                      _answers[index] = newCardContent.answer;
+                                      setState(() {
+                                        _questions[index] = newCardContent.question;
+                                        _answers[index] = newCardContent.answer;
+                                      });
                                     }
                                   }, question: editCard?.questions[index], answer: editCard?.answers[index]);
                                 } else {
-                                  var card = _cards[index];
-                                  card.onCardChanged = (newCardContent) {
+                                  returnCard = CardItem(index, false, onCardChanged: (newCardContent) {
                                     if (newCardContent.deleted) {
-                                      _cards.removeAt(newCardContent.index);
-                                      _questions.removeAt(newCardContent.index);
-                                      _answers.removeAt(newCardContent.index);
                                       setState(() {
+                                        _cards.removeAt(newCardContent.index);
+                                        if(_questions.length > newCardContent.index){
+                                          _questions.removeAt(newCardContent.index);
+                                        }
+                                        if(_answers.length > newCardContent.index){
+                                          _answers.removeAt(newCardContent.index);
+                                        }
                                         _delete = true;
                                       });
                                     } else {
-                                      _questions.add(newCardContent.question);
-                                      _answers.add(newCardContent.answer);
+                                      setState(() {
+                                        _questions.add(newCardContent.question);
+                                        _answers.add(newCardContent.answer);
+                                      });
                                     }
-                                  };
-                                  returnCard = card;
+                                  });
                                 }
                                 _cards[index] = returnCard;
                                 return returnCard;
@@ -221,25 +259,36 @@ class _AddCardPageState extends State<AddCardPage> {
     if(_cards.any((element) => element.saved == false)){
       showSnackBar(context, AppLocalizations.of(context)?.unsaved_card ?? 'Unsaved card(s)!', color: Resources.customColors.alertRed);
     } else {
-      if(editCard == null && _questions.isNotEmpty && _answers.isNotEmpty && _questions.length == _answers.length && _selectedCourse != null){
+      if(editCard == null && _questions.isNotEmpty && _answers.isNotEmpty && _questions.length == _answers.length){
+        if(_selectedCourse == null){
+          _selectedCourse = _firstValue;
+        }
         CardData newCard = CardData(courseName: _selectedCourse!.name, questions: _questions,
             answers: _answers, courseCode: _selectedCourse!.courseCode,
-            title: _titleController.text.isNotEmpty ? _titleController.text : null, isFavorite: true);
+            title: _titleController.text.isNotEmpty ? _titleController.text : null, isFavorite: [_localUser!]);
         BlocProvider.of<CardsCubit>(context)..createCard(newCard);
       } else if(editCard != null ){
         if(_selectedCourse == null){
           _selectedCourse = _firstValue;
         }
+        List<String> favorites = [];
+        favorites.addAll(editCard!.isFavorite!);
+        favorites.add(_localUser!);
         CardData newCard = editCard!.copyWith(
             title: _titleController.text.isNotEmpty ? _titleController.text : null,
             courseCode: _selectedCourse!.courseCode,
             courseName: _selectedCourse!.name,
             questions: _questions,
-            answers: _answers
+            answers: _answers,
+            isFavorite: favorites
         );
         BlocProvider.of<CardsCubit>(context)..updateCard(newCard);
       }
     }
+  }
+
+  void _deleteCard() {
+    BlocProvider.of<CardsCubit>(context)..deleteCard(editCard, _localUser);
   }
 }
 
@@ -261,6 +310,7 @@ class _CardItemState extends State<CardItem> {
   var _answerController = TextEditingController();
   bool _enabled = true;
   Color _cardColor = Resources.customColors.editCardBackground;
+  var _formKey = GlobalKey<FormState>();
 
   @override
   void initState(){
@@ -282,81 +332,108 @@ class _CardItemState extends State<CardItem> {
       child: Card(
         elevation: 10,
         color: _cardColor,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                !widget.saved && widget.onCardChanged != null ? IconButton(
-                  onPressed: (){
-                      widget.onCardChanged!(CardContent(widget.index, _questionController.text, _answerController.text));
-                      setState(() {
-                        widget.saved = true;
-                        _enabled = false;
-                        _cardColor = Resources.customColors.lightGreen;
-                      });
-                  },
-                  icon: Icon(Icons.check, size: 30, color: Colors.black),
-                ) : IconButton(
-                  onPressed: (){
-                    setState(() {
-                      widget.saved = false;
-                      _enabled = true;
-                      _cardColor = Resources.customColors.editCardBackground;
-                    });
-                  },
-                  icon: Icon(Icons.edit, size: 30, color: Colors.black),
-                ),
-                Padding(
-                  padding: EdgeInsets.only(left: 8.0),
-                  child: IconButton(
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  !widget.saved && widget.onCardChanged != null ? IconButton(
                     onPressed: (){
-                      widget.onCardChanged!(CardContent(widget.index, "", "", deleted: true));
+                      if(_formKey.currentState!.validate()){
+                        widget.onCardChanged!(
+                            CardContent(
+                                widget.index,
+                                _questionController.text,
+                                _answerController.text
+                            ));
+                        setState(() {
+                          widget.saved = true;
+                          _enabled = false;
+                          _cardColor = Resources.customColors.lightGreen;
+                        });
+                      }
                     },
-                    icon: Icon(Icons.delete, size: 30, color: Colors.black),
+                    icon: Icon(Icons.check, size: 30, color: Colors.black),
+                  ) : IconButton(
+                    onPressed: (){
+                      setState(() {
+                        widget.saved = false;
+                        _enabled = true;
+                        _cardColor = Resources.customColors.editCardBackground;
+                      });
+                    },
+                    icon: Icon(Icons.edit, size: 30, color: Colors.black),
                   ),
-                )
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: TextFormField(
-                controller: _questionController,
-                cursorColor: Colors.black,
-                cursorHeight: 20,
-                minLines: 1,
-                maxLines: 3,
-                enabled: _enabled,
-                style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
-                decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)?.question ?? 'Question',
-                    hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
-                    focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white)
-                    )
+                  Padding(
+                    padding: EdgeInsets.only(left: 8.0),
+                    child: IconButton(
+                      onPressed: (){
+                        widget.onCardChanged!(
+                            CardContent(
+                                widget.index,
+                                _questionController.text,
+                                _answerController.text,
+                                deleted: true
+                            )
+                        );
+                      },
+                      icon: Icon(Icons.delete, size: 30, color: Colors.black),
+                    ),
+                  )
+                ],
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                child: TextFormField(
+                  controller: _questionController,
+                  cursorColor: Colors.black,
+                  cursorHeight: 20,
+                  minLines: 1,
+                  maxLines: 3,
+                  enabled: _enabled,
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)?.question ?? 'Question',
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
+                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)
+                      )
+                  ),
+                  validator: (value){
+                    if(value == null || value.isEmpty){
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
+                    } else return null;
+                  },
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
-              child: TextFormField(
-                controller: _answerController,
-                cursorColor: Colors.black,
-                cursorHeight: 20,
-                minLines: 1,
-                maxLines: 3,
-                enabled: _enabled,
-                style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
-                decoration: InputDecoration(
-                    hintText: AppLocalizations.of(context)?.answer ?? 'Answer',
-                    hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
-                    focusedBorder: UnderlineInputBorder(
-                        borderSide: BorderSide(color: Colors.white)
-                    )
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                child: TextFormField(
+                  controller: _answerController,
+                  cursorColor: Colors.black,
+                  cursorHeight: 20,
+                  minLines: 1,
+                  maxLines: 3,
+                  enabled: _enabled,
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                  decoration: InputDecoration(
+                      hintText: AppLocalizations.of(context)?.answer ?? 'Answer',
+                      hintStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Color(0xFF828282)),
+                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white)
+                      )
+                  ),
+                  validator: (value){
+                    if(value == null || value.isEmpty){
+                      return AppLocalizations.of(context)?.empty_field ?? 'Please enter some text';
+                    } else return null;
+                  },
                 ),
-              ),
-            )
-          ],
+              )
+            ],
+          ),
         ),
       ),
     );

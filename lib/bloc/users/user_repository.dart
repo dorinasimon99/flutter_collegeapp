@@ -1,4 +1,5 @@
 import 'package:amplify_flutter/amplify.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
 import 'package:flutter_collegeapp/models/ModelProvider.dart';
 
 
@@ -7,6 +8,21 @@ class UsersRepository {
   Future<List<UserData>> getUsers() async {
     try {
       var items = await Amplify.DataStore.query(UserData.classType);
+      return items;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<List<UserData>> getStudents(List<String> usernames) async {
+    try {
+      var users = await Amplify.DataStore.query(UserData.classType);
+      var items = <UserData>[];
+      for(var user in users){
+        if(usernames.contains(user.username) && user.role == Roles.instance.student){
+          items.add(user);
+        }
+      }
       return items;
     } catch (e) {
       throw e;

@@ -8,7 +8,7 @@ import 'package:flutter_collegeapp/bloc/users/user_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
-import 'package:flutter_collegeapp/common/storage_repository.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
 import 'package:flutter_collegeapp/models/UserData.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
@@ -25,7 +25,6 @@ class _ProfilePageState extends State<ProfilePage> {
   ImageProvider backgroundImage = AssetImage("assets/avatar.png");
   final ImagePicker _picker = ImagePicker();
   String? _selectedImage;
-  String? imageKey;
   bool _editing = false;
   var _nameController = TextEditingController();
   var _semesterController = TextEditingController();
@@ -51,6 +50,7 @@ class _ProfilePageState extends State<ProfilePage> {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -61,7 +61,12 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   _editing ? IconButton(
                       onPressed: (){
-                        if(_editing){ _saveUser(); }
+                        if(_editing){
+                          _saveUser();
+                          setState(() {
+                            _editing = false;
+                          });
+                        }
                       },
                       icon: Icon(Icons.check, size: 40, color: Colors.black)
                   ) : IconButton(
@@ -69,7 +74,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         setState(() {
                           _editing = !_editing;
                           _nameController.text = user?.name ?? '';
-                          _semesterController.text = user?.actualSemester.toString() ?? '';
+                          user?.role == Roles.instance.student ? _semesterController.text = user?.actualSemester.toString() ?? '' : (){};
                         });
                       },
                       icon: Icon(Icons.edit, size: 40, color: Colors.black)
@@ -90,11 +95,14 @@ class _ProfilePageState extends State<ProfilePage> {
               _editing ? Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 30.0),
                 child: CustomTextFormField(_nameController, TextInputType.name),
-              ) : Text(
-                user?.name ?? '',
-                style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
+              ) : Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8.0),
+                child: Text(
+                  user?.name ?? '',
+                  style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
+                ),
               ),
-              Padding(
+              user?.role == Roles.instance.student ? Padding(
                 padding: const EdgeInsets.only(top: 30.0),
                 child: Row(
                   children: [
@@ -111,9 +119,15 @@ class _ProfilePageState extends State<ProfilePage> {
                        child: Text(
                         '${user?.actualSemester ?? ''}',
                         style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                      ),
                     ),
-                     ),
                   ],
+                ),
+              ) : InkWell(
+                onTap: () => Navigator.pushNamed(context, 'teacherRatings', arguments: user?.name),
+                child: Text(
+                  '${AppLocalizations.of(context)?.ratings ?? "Ratings"}...',
+                  style: Resources.customTextStyles.getCustomTextStyle(fontSize: 25),
                 ),
               ),
             ],
@@ -125,15 +139,12 @@ class _ProfilePageState extends State<ProfilePage> {
 
   void _selectImage() async {
     final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
-    var key;
-    if(pickedFile != null){
-      key = await StorageRepository().uploadFile(File(pickedFile.path));
-    }
+
     setState(() {
       _selectedImage = pickedFile?.path;
-      imageKey = key;
     });
   }
+
 
   Future<void> retrieveLostData() async {
     final LostDataResponse response = await _picker.retrieveLostData();
@@ -150,13 +161,16 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   void _saveUser() async {
-    var imageUrl = await StorageRepository().getUrlForFile(imageKey);
     var newUser = user?.copyWith(
-      avatar: imageUrl,
+      avatar: _selectedImage,
       name: _nameController.text.trim(),
-      actualSemester: int.parse(_semesterController.text.trim())
+      actualSemester: _semesterController.text.isNotEmpty ? int.parse(_semesterController.text.trim()) : null
     );
     if(newUser != null){
+      await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_NAME, newUser.name);
+      if(newUser.actualSemester != null){
+        await LocalStorage.localStorage.saveInt(LocalStorage.SIGNED_IN_SEMESTER, newUser.actualSemester!);
+      }
       BlocProvider.of<UsersCubit>(context)..updateUser(newUser);
     }
   }
@@ -167,7 +181,10 @@ class _ProfilePageState extends State<ProfilePage> {
           if (state is GetUserSuccess) {
             if (state.user.avatar != null) {
               setState(() {
-                backgroundImage = NetworkImage(state.user.avatar!);
+                File image = File(state.user.avatar!);
+                if(image.existsSync()){
+                  backgroundImage = FileImage(image);
+                }
                 user = state.user;
               });
             } else {
@@ -190,9 +207,9 @@ class _ProfilePageState extends State<ProfilePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               CircleAvatar(
-                backgroundImage: imageKey != null ? NetworkImage(imageKey ?? '') : _selectedImage != null ? FileImage(File(_selectedImage!)) : backgroundImage,
+                backgroundImage: _selectedImage != null ? FileImage(File(_selectedImage!)) : backgroundImage,
                 radius: 70,
-                child: Stack(children: [
+                child: _editing ? Stack(children: [
                   Align(
                     alignment: Alignment.bottomRight,
                     child: Container(
@@ -204,16 +221,15 @@ class _ProfilePageState extends State<ProfilePage> {
                           icon: Icon(Icons.camera_alt_outlined,
                               size: 30, color: Colors.black),
                           onPressed: () {
-                            setState(() {
-                              _editing = !_editing;
+                            /*setState(() {
                               _nameController.text = user?.name ?? '';
                               _semesterController.text = user?.actualSemester.toString() ?? '';
-                            });
+                            });*/
                             _selectImage();
                           }),
                     ),
                   ),
-                ]),
+                ]) : Container(),
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'dart:core';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,6 +8,7 @@ import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/bloc/courses/courses_cubit.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
 import 'package:flutter_collegeapp/models/CommentData.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';
 import 'package:flutter_collegeapp/models/UserCourse.dart';
@@ -16,7 +18,6 @@ import 'package:flutter_collegeapp/teacher/rating_model.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
-import '../app.dart';
 
 class TeacherRatingPage extends StatefulWidget {
   const TeacherRatingPage({Key? key}) : super(key: key);
@@ -27,9 +28,11 @@ class TeacherRatingPage extends StatefulWidget {
 
 class _TeacherRatingPageState extends State<TeacherRatingPage> {
   late String teacherName;
+  String? _role;
   ImageProvider backgroundImage = AssetImage('assets/avatar.png');
 
-  void _getUser() {
+  void _getUser() async {
+    _role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
     BlocProvider.of<UsersCubit>(context)..getUserByName(teacherName);
   }
 
@@ -58,9 +61,12 @@ class _TeacherRatingPageState extends State<TeacherRatingPage> {
                     if(state is GetUserByNameSuccess){
                       if(state.user.name == teacherName && state.user.avatar != null){
                         if(state.user.avatar != null){
-                          setState(() {
-                            backgroundImage = NetworkImage(state.user.avatar!);
-                          });
+                          File image = File(state.user.avatar!);
+                          if(image.existsSync()){
+                            setState(() {
+                              backgroundImage = FileImage(image);
+                            });
+                          }
                         } else {
                           setState(() {
                             backgroundImage = AssetImage('assets/avatar.png');
@@ -82,7 +88,7 @@ class _TeacherRatingPageState extends State<TeacherRatingPage> {
                     ],
                   ),
                 ),
-                Expanded(child: TeacherCoursesTabView(teacherName: teacherName))
+                Expanded(child: TeacherCoursesTabView(teacherName: teacherName, role: _role))
               ],
             ),
           ),
@@ -94,7 +100,8 @@ class _TeacherRatingPageState extends State<TeacherRatingPage> {
 
 class TeacherCoursesTabView extends StatefulWidget {
   final String? teacherName;
-  TeacherCoursesTabView({this.teacherName});
+  final String? role;
+  TeacherCoursesTabView({this.teacherName, this.role});
 
   @override
   _TeacherCoursesTabViewState createState() => _TeacherCoursesTabViewState();
@@ -117,7 +124,7 @@ class _TeacherCoursesTabViewState extends State<TeacherCoursesTabView> {
               AppLocalizations.of(context)?.ratings ?? 'Ratings',
               style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
             ),
-            TextButton(
+            widget.role != null && widget.role == Roles.instance.student ? TextButton(
               onPressed: () {
                 if(_selectedCourseCode != null){
                   Navigator.pushNamed(context, 'addRating', arguments: UserCourse(name: widget.teacherName!, username: "", courseCode: _selectedCourseCode!));
@@ -127,62 +134,53 @@ class _TeacherCoursesTabViewState extends State<TeacherCoursesTabView> {
                 "+",
                 style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
               ),
-            )
+            ) : Container()
           ],
         ),
-        BlocListener<CoursesCubit, CoursesState>(
-            listener: (context, state){
-              if (state is ListTeachersCoursesSuccess){
-                setState(() {
-                  _courses = state.courses;
-                  _createTabs(state.courses);
-                  _selectedCourseCode = state.courses[0].courseCode;
-                });
-              } else if (state is ListTeachersCoursesFailure){
-                showErrorAlert(state.exception.toString(), context);
-              }
-            },
-            child: Container()
-        ),
         Flexible(
-          child: BlocBuilder<CoursesCubit, CoursesState>(
-            builder: (context, state){
-              if(state is ListTeachersCoursesSuccess){
-                return DefaultTabController(
-                  length: _courses.length,
-                  child: Scaffold(
-                      appBar: AppBar(
-                        backgroundColor: Colors.transparent,
-                        shadowColor: Colors.transparent,
-                        flexibleSpace: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            TabBar(
-                              isScrollable: true,
-                              indicatorColor: Resources.customColors.cursorGreen,
-                              labelColor: Colors.black,
-                              labelStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
-                              tabs: _tabs,
-                              onTap: (index){
-                                _selectedCourseCode = _courses[index].courseCode;
-                              },
-                            )
-                          ],
-                        ),
-                        automaticallyImplyLeading: false,
+          child: BlocListener<CoursesCubit, CoursesState>(
+              listener: (context, state){
+                if (state is ListTeachersCoursesSuccess){
+                  setState(() {
+                    _courses = state.courses;
+                    _createTabs(state.courses);
+                    _selectedCourseCode = state.courses[0].courseCode;
+                  });
+                } else if (state is ListTeachersCoursesFailure){
+                  showErrorAlert(state.exception.toString(), context);
+                }
+              },
+              child: _courses.isNotEmpty ? DefaultTabController(
+                length: _courses.length,
+                child: Scaffold(
+                    appBar: AppBar(
+                      backgroundColor: Colors.transparent,
+                      shadowColor: Colors.transparent,
+                      flexibleSpace: Column(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TabBar(
+                            isScrollable: true,
+                            indicatorColor: Resources.customColors.cursorGreen,
+                            labelColor: Colors.black,
+                            labelStyle: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+                            tabs: _tabs,
+                            onTap: (index){
+                              _selectedCourseCode = _courses[index].courseCode;
+                            },
+                          )
+                        ],
                       ),
-                      body: TabBarView(
-                        children: _tabContent,
-                      )
-                  ),
-                );
-              } else if(state is ListTeachersCoursesFailure){
-                return Container();
-              } else return LoadingView();
-            },
+                      automaticallyImplyLeading: false,
+                    ),
+                    body: TabBarView(
+                      children: _tabContent,
+                    )
+                ),
+              ) : Container()
           ),
-          ),
+        ),
       ],
     );
   }
@@ -247,7 +245,7 @@ class _RatingsViewState extends State<RatingsView> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "${rating?.ratingNum ?? 0} ratings",
+                        "${rating?.ratingNum ?? 0} ${AppLocalizations.of(context)?.rating ?? ''}",
                         style: Resources.customTextStyles.getCustomTextStyle(fontSize: 24),
                       ),
                       RatingBar(

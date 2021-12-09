@@ -32,8 +32,8 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
   @override
   Widget build(BuildContext context) {
     if(!_refresh){
-      card = ModalRoute.of(context)!.settings.arguments as CardData;
-      _setFavorite(card!.isFavorite);
+      card = ModalRoute.of(context)?.settings.arguments as CardData;
+      //_setFavorite(card!.isFavorite);
     }
     return Scaffold(
       appBar: Header(context, isMenu: false),
@@ -46,9 +46,9 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Flexible(
+                Expanded(
                   child: Text(
-                    "${card!.title != null && card!.title!.isNotEmpty ? card!.title! : card!.courseName} ${AppLocalizations.of(context)?.cards ?? 'cards'}" ,
+                    "${card?.title != null && card?.title?.isNotEmpty == true ? card?.title ?? '' : card?.courseName} ${AppLocalizations.of(context)?.cards ?? 'cards'}" ,
                     style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
                   ),
                 ),
@@ -61,17 +61,22 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                       });
                     } else if(state is UpdateCardFailure){
                       showErrorAlert(state.exception.toString(), context);
+                    } else if(state is DeleteCardSuccess){
+                      Navigator.pop(context);
+                    } else if(state is DeleteCardFailure){
+                      showErrorAlert(state.exception.toString(), context);
                     }
                   },
-                  child: IconButton(
-                    onPressed: (){
-                      setState(() {
-                        _favorite = !_favorite!;
-                      });
-                      _updateFavorites();
-                    },
-                    icon: Icon(_favorite! ? Icons.favorite : Icons.favorite_border, size: 40, color: Resources.customColors.cardGreen),
-                  ),
+                  child: Container(),
+                ),
+                IconButton(
+                  onPressed: (){
+                    setState(() {
+                      _favorite = !_favorite!;
+                    });
+                    _updateFavorites();
+                  },
+                  icon: Icon(_favorite ?? false ? Icons.favorite : Icons.favorite_border, size: 40, color: Resources.customColors.cardGreen),
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -79,7 +84,7 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                     onPressed: _navigateToAddCard,
                     icon: Icon(Icons.edit, size: 40),
                   ),
-                )
+                ),
               ],
             ),
             Flexible(
@@ -97,18 +102,32 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
                             front: Card(
                                 color: Resources.customColors.cardGreen,
                                 child: Center(
-                                  child: Text(
-                                    card!.questions.elementAt(index),
-                                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: SingleChildScrollView(
+                                      child: Flexible(
+                                        child: Text(
+                                          card!.questions.elementAt(index),
+                                          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 )
                             ),
                             back: Card(
                                 color: Resources.customColors.cardGreen,
                                 child: Center(
-                                  child: Text(
-                                    card!.answers.elementAt(index),
-                                    style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: SingleChildScrollView(
+                                      child: Flexible(
+                                        child: Text(
+                                          card!.answers.elementAt(index),
+                                          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24),
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 )
                             ),
@@ -138,7 +157,7 @@ class _LearnStudyCardsPageState extends State<LearnStudyCardsPage> {
   }
 
   void _updateFavorites() async {
-    CardData? saveCard = card?.copyWith(isFavorite: _favorite);
+    CardData? saveCard = card?.copyWith();
     BlocProvider.of<CardsCubit>(context).updateCard(saveCard);
   }
 }

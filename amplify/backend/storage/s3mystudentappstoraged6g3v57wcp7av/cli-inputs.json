@@ -1,0 +1,16 @@
+{
+  "resourceName": "s3mystudentappstoraged6g3v57wcp7av",
+  "bucketName": "mystudentapp-storage-d6g3v57wcp7av",
+  "policyUUID": "cab8279c",
+  "storageAccess": "authAndGuest",
+  "guestAccess": [
+    "CREATE_AND_UPDATE",
+    "READ",
+    "DELETE"
+  ],
+  "authAccess": [
+    "READ",
+    "CREATE_AND_UPDATE",
+    "DELETE"
+  ]
+}

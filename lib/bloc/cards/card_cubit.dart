@@ -58,6 +58,16 @@ class ListFavoriteCardsSuccess extends CardsState {
   ListFavoriteCardsSuccess({required this.cards});
 }
 
+class DeleteCardSuccess extends CardsState {}
+
+class DeleteCardFailure extends CardsState {
+  final Object exception;
+
+  DeleteCardFailure({required this.exception});
+}
+
+
+
 class CardsCubit extends Cubit<CardsState> {
   final _cardsRepo = CardsRepository();
 
@@ -122,5 +132,19 @@ class CardsCubit extends Cubit<CardsState> {
         emit(UpdateCardFailure(exception: e));
       }
     }
+  }
+
+  void deleteCard(CardData? card, String? username) async {
+    if(card == null || username == null) {
+      emit(DeleteCardFailure(exception: Exception("Card or username is null")));
+    } else {
+      try{
+        await _cardsRepo.deleteCard(card, username);
+        emit(DeleteCardSuccess());
+      } catch (e){
+        emit(DeleteCardFailure(exception: e));
+      }
+    }
+
   }
 }

@@ -188,7 +188,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                         },
                       ),
                     ),
-                    Row(
+                    /*Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         NumberPicker(
@@ -229,7 +229,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
                               (value){},
                               (value){}
                       ),
-                    ),
+                    ),*/
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10.0),
                       child: Row(
@@ -240,7 +240,8 @@ class _AddCoursePageState extends State<AddCoursePage> {
                             style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
                           ),
                           TextButton(
-                            onPressed: () => (_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null ? setState(() {
+                            onPressed: () => ((_localRole != null && _localRole == Roles.instance.teacher) || selectedCourse == null) && _currentCreditsValue > 0
+                                ? setState(() {
                               _currentCreditsValue--;
                             }) : (){},
                             child: Text(
@@ -275,65 +276,68 @@ class _AddCoursePageState extends State<AddCoursePage> {
   void _saveCourse(BuildContext context) async {
     var localUserRole = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
     var saveCourse;
-    if(selectedCourse != null){
-      if(localUserRole != null && _localName != null){
-        if(localUserRole == Roles.instance.teacher){
-          if(selectedCourse?.teachers == null){
-            saveCourse = CourseData(
-                id: selectedCourse!.id,
-                name: _courseNameTextController.text,
-                credits: _currentCreditsValue,
-                time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
-                courseCode: _courseCodeTextController.text,
-                teachers: [_localName!]
-            );
-          } else {
-            selectedCourse?.teachers?.add(_localName!);
-            saveCourse = CourseData(
-                id: selectedCourse!.id,
-                name: _courseNameTextController.text,
-                credits: _currentCreditsValue,
-                time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
-                courseCode: _courseCodeTextController.text,
-                teachers: selectedCourse!.teachers
-            );
-          }
-          BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
-        } else {
-          saveCourse = CourseData(
-              id: selectedCourse!.id,
-              name: _courseNameTextController.text,
-              credits: _currentCreditsValue,
-              time: '$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
-              courseCode: _courseCodeTextController.text
-          );
-          BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
-        }
-      }
+    if(_currentEndHour < _currentStartHour || (_currentEndHour == _currentStartHour && _currentEndMinute < _currentStartMinute)){
+     showErrorAlert(AppLocalizations.of(context)?.end_before_start ?? "End time can't be before start time!", context);
     } else {
-      var course = CourseData(
-          courseCode: _courseCodeTextController.text,
-          name: _courseNameTextController.text,
-          credits: _currentCreditsValue,
-          time: "$_currentDayValue $_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}");
-      if(localUserRole != null && _localName != null && _localUsername != null){
-        if(localUserRole == Roles.instance.teacher){
-          saveCourse = course.copyWith(teachers: [_localName!]);
-          BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, saveCourse);
-        } else {
-          BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, course);
+      if(selectedCourse != null){
+        if(localUserRole != null && _localName != null){
+          if(localUserRole == Roles.instance.teacher){
+            if(selectedCourse?.teachers == null){
+              var _teachers = [_localName!];
+              saveCourse = CourseData(
+                  id: selectedCourse!.id,
+                  name: _courseNameTextController.text,
+                  credits: _currentCreditsValue,
+                  courseCode: _courseCodeTextController.text,
+                  teachers: _teachers
+              );
+            } else {
+              List<String> _teachers = [];
+              _teachers.addAll(selectedCourse!.teachers!);
+              _teachers.add(_localName!);
+              saveCourse = CourseData(
+                  id: selectedCourse!.id,
+                  name: _courseNameTextController.text,
+                  credits: _currentCreditsValue,
+                  courseCode: _courseCodeTextController.text,
+                  teachers: _teachers
+              );
+            }
+            BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
+          } else {
+            saveCourse = CourseData(
+                id: selectedCourse!.id,
+                name: _courseNameTextController.text,
+                credits: _currentCreditsValue,
+                courseCode: _courseCodeTextController.text
+            );
+            BlocProvider.of<CoursesCubit>(context)..updateCourse(_localUsername!, _localUserSemester!, _localName!, selectedCourse!.courseCode, saveCourse);
+          }
+        }
+      } else {
+        var course = CourseData(
+            courseCode: _courseCodeTextController.text,
+            name: _courseNameTextController.text,
+            credits: _currentCreditsValue);
+        if(localUserRole != null && _localName != null && _localUsername != null){
+          if(localUserRole == Roles.instance.teacher){
+            saveCourse = course.copyWith(teachers: [_localName!]);
+            BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, saveCourse);
+          } else {
+            BlocProvider.of<CoursesCubit>(context)..createCourse(_localUsername!, _localName!, _localUserSemester!, course);
+          }
         }
       }
-    }
 
-    _courseNameTextController.text = '';
-    _courseCodeTextController.text = '';
-    _currentDayValue = Days.instance.days[0];
-    _currentCreditsValue = 0;
-    _currentStartHour = 8;
-    _currentStartMinute = 15;
-    _currentEndHour = 10;
-    _currentEndMinute = 0;
+      _courseNameTextController.text = '';
+      _courseCodeTextController.text = '';
+      _currentDayValue = Days.instance.days[0];
+      _currentCreditsValue = 0;
+      _currentStartHour = 8;
+      _currentStartMinute = 15;
+      _currentEndHour = 10;
+      _currentEndMinute = 0;
+    }
   }
 
   void _showSelectCourseDialog(List<CourseData> courses) async {
@@ -343,12 +347,7 @@ class _AddCoursePageState extends State<AddCoursePage> {
       setState(() {
         _courseNameTextController.text = _selectedCourse.name;
         _courseCodeTextController.text = _selectedCourse.courseCode;
-        _currentDayValue = _selectedCourse.time.split(" ")[0];
         _currentCreditsValue = _selectedCourse.credits;
-        _currentStartHour = int.parse(_selectedCourse.time.split(" ")[1].split("-")[0].split(":")[0]);
-        _currentStartMinute = int.parse(_selectedCourse.time.split(" ")[1].split("-")[0].split(":")[1]);
-        _currentEndHour = int.parse(_selectedCourse.time.split(" ")[1].split("-")[1].split(":")[0]);
-        _currentEndMinute = int.parse(_selectedCourse.time.split(" ")[1].split("-")[1].split(":")[1]);
         selectedCourse = _selectedCourse;
       });
     }

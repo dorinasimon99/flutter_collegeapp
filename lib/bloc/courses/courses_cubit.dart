@@ -103,7 +103,7 @@ class CoursesCubit extends Cubit<CoursesState> {
     }
   }
 
-  void getActualSemesterCourses(String name, int actualSemester) async {
+  void getActualSemesterCourses(String name, int? actualSemester) async {
     try {
       final courses = await _coursesRepo.getActualSemesterCourses(name, actualSemester);
       emit(ListActualSemesterCoursesSuccess(courses: courses));

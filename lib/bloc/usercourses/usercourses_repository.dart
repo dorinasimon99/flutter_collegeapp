@@ -14,6 +14,16 @@ class UserCoursesRepository {
     }
   }
 
+  Future<List<UserCourse>> getUserCoursesByCourseCode(String courseCode) async {
+    try {
+      var items = await Amplify.DataStore.query(UserCourse.classType,
+          where: UserCourse.VISIBLE.eq(null).or(UserCourse.VISIBLE.eq(true).or(UserCourse.VISIBLE.eq('true'))).and(UserCourse.COURSECODE.eq(courseCode)));
+      return items;
+    } catch (e) {
+      throw e;
+    }
+  }
+
   Future<List<UserCourse>> getActualSemesterUserCourses(String username, int actualSemester) async {
     try {
       var items = await Amplify.DataStore.query(UserCourse.classType,

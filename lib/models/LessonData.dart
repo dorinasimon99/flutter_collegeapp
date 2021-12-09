@@ -13,7 +13,11 @@
 * permissions and limitations under the License.
 */
 
-// ignore_for_file: public_member_api_docs
+// NOTE: This file is generated and may not follow lint rules defined in your app
+// Generated files can be excluded from analysis in analysis_options.yaml
+// For more info, see: https://dart.dev/guides/language/analysis-options#excluding-code-from-analysis
+
+// ignore_for_file: public_member_api_docs, file_names, unnecessary_new, prefer_if_null_operators, prefer_const_constructors, slash_for_doc_comments, annotate_overrides, non_constant_identifier_names, unnecessary_string_interpolations, prefer_adjacent_string_concatenation, unnecessary_const, dead_code
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -26,7 +30,6 @@ class LessonData extends Model {
   final String id;
   final String? _date;
   final String? _time;
-  final String? _owner;
   final String? _courseCode;
   final String? _description;
   final String? _title;
@@ -55,14 +58,6 @@ class LessonData extends Model {
     }
   }
   
-  String get owner {
-    try {
-      return _owner!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
-  }
-  
   String get courseCode {
     try {
       return _courseCode!;
@@ -83,14 +78,13 @@ class LessonData extends Model {
     }
   }
   
-  const LessonData._internal({required this.id, required date, required time, required owner, required courseCode, description, required title}): _date = date, _time = time, _owner = owner, _courseCode = courseCode, _description = description, _title = title;
+  const LessonData._internal({required this.id, required date, required time, required courseCode, description, required title}): _date = date, _time = time, _courseCode = courseCode, _description = description, _title = title;
   
-  factory LessonData({String? id, required String date, required String time, required String owner, required String courseCode, String? description, required String title}) {
+  factory LessonData({String? id, required String date, required String time, required String courseCode, String? description, required String title}) {
     return LessonData._internal(
       id: id == null ? UUID.getUUID() : id,
       date: date,
       time: time,
-      owner: owner,
       courseCode: courseCode,
       description: description,
       title: title);
@@ -107,7 +101,6 @@ class LessonData extends Model {
       id == other.id &&
       _date == other._date &&
       _time == other._time &&
-      _owner == other._owner &&
       _courseCode == other._courseCode &&
       _description == other._description &&
       _title == other._title;
@@ -124,7 +117,6 @@ class LessonData extends Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("date=" + "$_date" + ", ");
     buffer.write("time=" + "$_time" + ", ");
-    buffer.write("owner=" + "$_owner" + ", ");
     buffer.write("courseCode=" + "$_courseCode" + ", ");
     buffer.write("description=" + "$_description" + ", ");
     buffer.write("title=" + "$_title");
@@ -133,12 +125,11 @@ class LessonData extends Model {
     return buffer.toString();
   }
   
-  LessonData copyWith({String? id, String? date, String? time, String? owner, String? courseCode, String? description, String? title}) {
+  LessonData copyWith({String? id, String? date, String? time, String? courseCode, String? description, String? title}) {
     return LessonData(
       id: id ?? this.id,
       date: date ?? this.date,
       time: time ?? this.time,
-      owner: owner ?? this.owner,
       courseCode: courseCode ?? this.courseCode,
       description: description ?? this.description,
       title: title ?? this.title);
@@ -148,19 +139,17 @@ class LessonData extends Model {
     : id = json['id'],
       _date = json['date'],
       _time = json['time'],
-      _owner = json['owner'],
       _courseCode = json['courseCode'],
       _description = json['description'],
       _title = json['title'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'date': _date, 'time': _time, 'owner': _owner, 'courseCode': _courseCode, 'description': _description, 'title': _title
+    'id': id, 'date': _date, 'time': _time, 'courseCode': _courseCode, 'description': _description, 'title': _title
   };
 
   static final QueryField ID = QueryField(fieldName: "lessonData.id");
   static final QueryField DATE = QueryField(fieldName: "date");
   static final QueryField TIME = QueryField(fieldName: "time");
-  static final QueryField OWNER = QueryField(fieldName: "owner");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static final QueryField DESCRIPTION = QueryField(fieldName: "description");
   static final QueryField TITLE = QueryField(fieldName: "title");
@@ -189,12 +178,6 @@ class LessonData extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: LessonData.TIME,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: LessonData.OWNER,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));

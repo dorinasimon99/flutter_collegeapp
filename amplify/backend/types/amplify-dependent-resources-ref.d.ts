@@ -21,7 +21,7 @@ export type AmplifyDependentResourcesAttributes = {
         }
     },
     "storage": {
-        "s3Avatars": {
+        "s3mystudentappstoraged6g3v57wcp7av": {
             "BucketName": "string",
             "Region": "string"
         }

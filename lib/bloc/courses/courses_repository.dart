@@ -32,9 +32,14 @@ class CoursesRepository {
     }
   }
 
-  Future<List<CourseData>> getActualSemesterCourses(String username, int actualSemester) async {
+  Future<List<CourseData>> getActualSemesterCourses(String username, int? actualSemester) async {
     try {
-      var userCourses = await UserCoursesRepository().getActualSemesterUserCourses(username, actualSemester);
+      var userCourses = <UserCourse>[];
+      if(actualSemester == null){
+        userCourses = await UserCoursesRepository().getUserCoursesByUsername(username);
+      } else {
+        userCourses = await UserCoursesRepository().getActualSemesterUserCourses(username, actualSemester);
+      }
       var allCourses = await Amplify.DataStore.query(CourseData.classType);
       var courseCodes = <String>[];
       for(var userCourse in userCourses){

@@ -23,11 +23,23 @@ class _AddQuizPageState extends State<AddQuizPage> {
   String? _lessonID;
   QuizData? _editQuiz;
   bool _editing = false;
+  bool _refresh = false;
   final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose(){
+    _titleController.dispose();
+    _linkController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   void _getArgs(List<Object?> arguments){
     _lessonID = arguments[0] as String;
-    _editQuiz = arguments[1] as QuizData?;
+    if(arguments.length == 2){
+      _editQuiz = arguments[1] as QuizData?;
+    }
+
     if(_editQuiz != null){
       setState(() {
         _editing = true;
@@ -42,7 +54,9 @@ class _AddQuizPageState extends State<AddQuizPage> {
   @override
   Widget build(BuildContext context) {
     List<Object?> args = ModalRoute.of(context)!.settings.arguments as List<Object?>;
-    _getArgs(args);
+    if(!_refresh){
+      _getArgs(args);
+    }
     return Scaffold(
       appBar: Header(context, isMenu: false),
       body: SingleChildScrollView(
@@ -121,6 +135,7 @@ class _AddQuizPageState extends State<AddQuizPage> {
                             value: _isVisible,
                             onChanged: (visible) {
                               setState(() {
+                                _refresh = true;
                                 _isVisible = visible;
                               });},
                             activeTrackColor: Resources.customColors.cursorGreen,

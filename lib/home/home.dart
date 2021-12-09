@@ -1,5 +1,4 @@
 import 'package:amplify_flutter/amplify.dart';
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -21,11 +20,9 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool _showAlert = false;
   String? username;
   String? name;
   int? semester;
-  bool hasConnection = false;
   String date = DateFormat('yyyy.M.dd.').format(DateTime.now());
   List<LessonData> _lessons = [];
 
@@ -61,8 +58,12 @@ class _HomePageState extends State<HomePage> {
                 listener: (context, state) {
                   if(state is GetUserSuccess){
                     _saveUser(state.user);
-                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(state.user.name, state.user.actualSemester, date);
+                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(state.user.username, state.user.actualSemester, date);
                   } else if (state is GetUserFailure){
+                    showErrorAlert(state.exception.toString(), context);
+                  } else if(state is UpdateUserSuccess){
+                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(state.user.username, state.user.actualSemester, date);
+                  } else if (state is UpdateUserFailure){
                     showErrorAlert(state.exception.toString(), context);
                   }
                 },
@@ -75,7 +76,7 @@ class _HomePageState extends State<HomePage> {
               BlocListener<LessonsCubit, LessonsState>(
                 listener: (context, state){
                   if(state is CreateLessonSuccess){
-                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(name!, semester!, date);
+                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(username!, semester, date);
                   } else if (state is ListTodayLessonsSuccess){
                     setState(() {
                       _lessons = state.lessons;
@@ -84,10 +85,10 @@ class _HomePageState extends State<HomePage> {
                     showErrorAlert(state.exception.toString(), context);
                   } else if(state is ListTodayLessonsFailure){
                     showErrorAlert(state.exception.toString(), context);
+                  } else if(state is ListUserLessonsSuccess){
+                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(username!, semester, date);
                   } else if(state is UpdateLessonSuccess){
-                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(name!, semester!, date);
-                  } else if(state is UpdateLessonFailure){
-                    showErrorAlert(state.exception.toString(), context);
+                    BlocProvider.of<LessonsCubit>(context)..getTodayLessons(username!, semester, date);
                   }
                 },
                 child: Container(),
@@ -114,12 +115,11 @@ class _HomePageState extends State<HomePage> {
   void _saveUser(UserData user) async {
     await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_ROLE, user.role);
     await LocalStorage.localStorage.saveString(LocalStorage.SIGNED_IN_NAME, user.name);
-    if(user.actualSemester != null){
-      setState(() {
+    setState(() {
         semester = user.actualSemester;
         name = user.name;
-      });
-      await LocalStorage.localStorage.saveInt(LocalStorage.SIGNED_IN_SEMESTER, user.actualSemester);
-    }
+    });
+    await LocalStorage.localStorage.saveInt(LocalStorage.SIGNED_IN_SEMESTER, user.actualSemester);
+
   }
 }
