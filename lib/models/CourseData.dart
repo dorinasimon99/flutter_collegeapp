@@ -13,7 +13,11 @@
 * permissions and limitations under the License.
 */
 
-// ignore_for_file: public_member_api_docs
+// NOTE: This file is generated and may not follow lint rules defined in your app
+// Generated files can be excluded from analysis in analysis_options.yaml
+// For more info, see: https://dart.dev/guides/language/analysis-options#excluding-code-from-analysis
+
+// ignore_for_file: public_member_api_docs, file_names, unnecessary_new, prefer_if_null_operators, prefer_const_constructors, slash_for_doc_comments, annotate_overrides, non_constant_identifier_names, unnecessary_string_interpolations, prefer_adjacent_string_concatenation, unnecessary_const, dead_code
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:collection/collection.dart';
@@ -27,7 +31,6 @@ class CourseData extends Model {
   final String id;
   final String? _name;
   final int? _credits;
-  final String? _time;
   final List<String>? _teachers;
   final String? _courseCode;
 
@@ -55,14 +58,6 @@ class CourseData extends Model {
     }
   }
   
-  String get time {
-    try {
-      return _time!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
-  }
-  
   List<String>? get teachers {
     return _teachers;
   }
@@ -75,14 +70,13 @@ class CourseData extends Model {
     }
   }
   
-  const CourseData._internal({required this.id, required name, required credits, required time, teachers, required courseCode}): _name = name, _credits = credits, _time = time, _teachers = teachers, _courseCode = courseCode;
+  const CourseData._internal({required this.id, required name, required credits, teachers, required courseCode}): _name = name, _credits = credits, _teachers = teachers, _courseCode = courseCode;
   
-  factory CourseData({String? id, required String name, required int credits, required String time, List<String>? teachers, required String courseCode}) {
+  factory CourseData({String? id, required String name, required int credits, List<String>? teachers, required String courseCode}) {
     return CourseData._internal(
       id: id == null ? UUID.getUUID() : id,
       name: name,
       credits: credits,
-      time: time,
       teachers: teachers != null ? List<String>.unmodifiable(teachers) : teachers,
       courseCode: courseCode);
   }
@@ -98,7 +92,6 @@ class CourseData extends Model {
       id == other.id &&
       _name == other._name &&
       _credits == other._credits &&
-      _time == other._time &&
       DeepCollectionEquality().equals(_teachers, other._teachers) &&
       _courseCode == other._courseCode;
   }
@@ -114,7 +107,6 @@ class CourseData extends Model {
     buffer.write("id=" + "$id" + ", ");
     buffer.write("name=" + "$_name" + ", ");
     buffer.write("credits=" + (_credits != null ? _credits!.toString() : "null") + ", ");
-    buffer.write("time=" + "$_time" + ", ");
     buffer.write("teachers=" + (_teachers != null ? _teachers!.toString() : "null") + ", ");
     buffer.write("courseCode=" + "$_courseCode");
     buffer.write("}");
@@ -122,12 +114,11 @@ class CourseData extends Model {
     return buffer.toString();
   }
   
-  CourseData copyWith({String? id, String? name, int? credits, String? time, List<String>? teachers, String? courseCode}) {
+  CourseData copyWith({String? id, String? name, int? credits, List<String>? teachers, String? courseCode}) {
     return CourseData(
       id: id ?? this.id,
       name: name ?? this.name,
       credits: credits ?? this.credits,
-      time: time ?? this.time,
       teachers: teachers ?? this.teachers,
       courseCode: courseCode ?? this.courseCode);
   }
@@ -135,19 +126,17 @@ class CourseData extends Model {
   CourseData.fromJson(Map<String, dynamic> json)  
     : id = json['id'],
       _name = json['name'],
-      _credits = json['credits'],
-      _time = json['time'],
+      _credits = (json['credits'] as num?)?.toInt(),
       _teachers = json['teachers']?.cast<String>(),
       _courseCode = json['courseCode'];
   
   Map<String, dynamic> toJson() => {
-    'id': id, 'name': _name, 'credits': _credits, 'time': _time, 'teachers': _teachers, 'courseCode': _courseCode
+    'id': id, 'name': _name, 'credits': _credits, 'teachers': _teachers, 'courseCode': _courseCode
   };
 
   static final QueryField ID = QueryField(fieldName: "courseData.id");
   static final QueryField NAME = QueryField(fieldName: "name");
   static final QueryField CREDITS = QueryField(fieldName: "credits");
-  static final QueryField TIME = QueryField(fieldName: "time");
   static final QueryField TEACHERS = QueryField(fieldName: "teachers");
   static final QueryField COURSECODE = QueryField(fieldName: "courseCode");
   static var schema = Model.defineSchema(define: (ModelSchemaDefinition modelSchemaDefinition) {
@@ -177,12 +166,6 @@ class CourseData extends Model {
       key: CourseData.CREDITS,
       isRequired: true,
       ofType: ModelFieldType(ModelFieldTypeEnum.int)
-    ));
-    
-    modelSchemaDefinition.addField(ModelFieldDefinition.field(
-      key: CourseData.TIME,
-      isRequired: true,
-      ofType: ModelFieldType(ModelFieldTypeEnum.string)
     ));
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(

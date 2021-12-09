@@ -22,7 +22,7 @@ class QuizzesRepository {
         items = await Amplify.DataStore.query(QuizData.classType, where: QuizData.LESSONID.eq(lessonID));
       } else {
         items = await Amplify.DataStore.query(QuizData.classType, where: QuizData.LESSONID.eq(lessonID)
-            .and(QuizData.VISIBLE.eq(true)));
+            .and(QuizData.VISIBLE.eq(true).or(QuizData.VISIBLE.eq('true'))));
       }
       return items;
     } catch (e) {

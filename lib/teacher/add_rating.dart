@@ -40,6 +40,12 @@ class _AddRatingPageState extends State<AddRatingPage> {
   }
 
   @override
+  void dispose(){
+    _commentController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     _args = ModalRoute.of(context)!.settings.arguments as UserCourse;
     return Scaffold(
@@ -122,7 +128,7 @@ class _AddRatingPageState extends State<AddRatingPage> {
                         Navigator.pop(context);
                       },
                       child: Text(
-                        AppLocalizations.of(context)?.save ?? 'Save',
+                        AppLocalizations.of(context)?.save.toUpperCase() ?? 'Save',
                       )
                   ),
                 ],

@@ -164,12 +164,14 @@ class _SignUpPageState extends State<SignUpPage> {
                       style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24, color: Color(0xFF828282)),
                     ),
                     DropdownButton<String>(
-                      value: _role,
+                      value: Roles.instance.values.firstWhere((element) => element == _role),
                       items: Roles.instance.values.map<DropdownMenuItem<String>>((String value) {
                         return DropdownMenuItem<String>(
-                            value: value, child: Text(
-                          value.toString(),
-                          style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                            value: value,
+                            child: Text(
+                              Roles.instance.values.indexOf(value) == 0 ? AppLocalizations.of(context)?.student.toUpperCase() ?? value :
+                              AppLocalizations.of(context)?.teacher.toUpperCase() ?? value,
+                            style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
                         ));
                       }).toList(),
                       onChanged: (String? newValue){
@@ -180,7 +182,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     )
                   ],
                 ),
-                Container(
+                _role == Roles.instance.student ? Container(
                   child: Row(
                     children: [
                       Text(
@@ -202,7 +204,7 @@ class _SignUpPageState extends State<SignUpPage> {
                                 )
                             ),
                             validator: (value) {
-                              if (value == null || value.isEmpty) {
+                              if (_role == Roles.instance.student && (value == null || value.isEmpty)) {
                                 return AppLocalizations.of(context)?.empty_field ?? 'Please add a value';
                               }
                               return null;
@@ -212,7 +214,7 @@ class _SignUpPageState extends State<SignUpPage> {
                       )
                     ],
                   ),
-                ),
+                ) : Container(),
                 TextFormField(
                   controller: _emailController,
                   cursorColor: Resources.customColors.cursorGreen,
@@ -302,7 +304,7 @@ class _SignUpPageState extends State<SignUpPage> {
             username: _userNameController.text.trim(),
             role: _role.trim(),
             name: _nameController.text.trim(),
-            actualSemester: int.parse(_actualSemesterController.text.trim())
+            actualSemester: _actualSemesterController.text.isNotEmpty ? int.parse(_actualSemesterController.text.trim()) : 0
         );
         BlocProvider.of<UsersCubit>(context)..createUser(user);
         Navigator.pushNamed(context, 'home');

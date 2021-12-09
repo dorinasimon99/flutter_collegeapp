@@ -60,7 +60,7 @@ class _MenuPageState extends State<MenuPage> {
                                 if (state is GetUserSuccess) {
                                   if (state.user.avatar != null) {
                                     setState(() {
-                                      backgroundImage = NetworkImage(state.user.avatar!);
+                                      backgroundImage = FileImage(File(state.user.avatar!));
                                       user = state.user;
                                     });
                                   } else {
@@ -74,7 +74,7 @@ class _MenuPageState extends State<MenuPage> {
                                 } else if(state is UpdateUserSuccess){
                                   if (state.user.avatar != null) {
                                     setState(() {
-                                      backgroundImage = NetworkImage(state.user.avatar!);
+                                      backgroundImage = FileImage(File(state.user.avatar!));
                                       user = state.user;
                                     });
                                   } else {
@@ -118,7 +118,7 @@ class _MenuPageState extends State<MenuPage> {
                   )
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 20.0),
+                padding: const EdgeInsets.symmetric(vertical: 10.0),
                 child: TextButton(
                   onPressed: () => Navigator.pushNamed(context, 'timetable'),
                   child: Row(
@@ -137,7 +137,7 @@ class _MenuPageState extends State<MenuPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
+                padding: const EdgeInsets.only(bottom: 10.0),
                 child: TextButton(
                   onPressed: () => Navigator.pushNamed(context, 'courses'),
                   child: Row(
@@ -156,7 +156,7 @@ class _MenuPageState extends State<MenuPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
+                padding: const EdgeInsets.only(bottom: 10.0),
                 child: TextButton(
                   onPressed: () => Navigator.pushNamed(context, 'statistics'),
                   child: Row(
@@ -175,8 +175,8 @@ class _MenuPageState extends State<MenuPage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.only(bottom: 20.0),
-                child: user != null && user!.role == Roles.instance.student ? TextButton(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: TextButton(
                   onPressed: () => Navigator.pushNamed(context, 'cards'),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
@@ -191,30 +191,34 @@ class _MenuPageState extends State<MenuPage> {
                       ),
                     ],
                   ),
-                ) : TextButton(
-                  onPressed: () => Navigator.pushNamed(context, 'quizzes'),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Image.asset('assets/cards.png', width: 45),
-                      Padding(
-                        padding: const EdgeInsets.only(left: 10.0),
-                        child: Text(
-                          AppLocalizations.of(context)?.quizzes ?? 'Quizzes',
-                          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
               ),
+              user != null && user!.role == Roles.instance.teacher ? Padding(
+                padding: const EdgeInsets.only(bottom: 10.0),
+                child: TextButton(
+                    onPressed: () => Navigator.pushNamed(context, 'quizzes'),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Image.asset('assets/cards.png', width: 45),
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10.0),
+                          child: Text(
+                            AppLocalizations.of(context)?.quizzes ?? 'Quizzes',
+                            style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ) : Container(),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 40.0),
+                      padding: const EdgeInsets.fromLTRB(0.0, 0.0, 0.0, 20.0),
                       child: TextButton(
                         onPressed: _signOut,
                         child: Row(

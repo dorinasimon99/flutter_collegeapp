@@ -69,6 +69,15 @@ class UserCoursesCubit extends Cubit<UserCoursesState> {
     }
   }
 
+  void getUserCoursesByCourseCode(String courseCode) async {
+    try {
+      final userCourse = await _userCoursesRepo.getUserCoursesByCourseCode(courseCode);
+      emit(ListUserCoursesSuccess(userCourses: userCourse));
+    } catch (e) {
+      emit(ListUserCoursesFailure(exception: e));
+    }
+  }
+
   void getUserCourse(String name, String courseCode) async {
     try {
       final userCourse = await _userCoursesRepo.getUserCourseByNameAndCourseCode(name, courseCode);

@@ -1,7 +1,5 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_collegeapp/bloc/courses/courses_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';

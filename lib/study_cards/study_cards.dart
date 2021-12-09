@@ -75,6 +75,11 @@ class _StudyCardsPageState extends State<StudyCardsPage> {
                   BlocProvider.of<CardsCubit>(context)..getFavoriteCards(_username);
                 } else if(state is UpdateCardFailure){
                   showErrorAlert(state.exception.toString(), context);
+                } else if(state is DeleteCardSuccess){
+                  BlocProvider.of<CardsCubit>(context)..getCards(_username);
+                  BlocProvider.of<CardsCubit>(context)..getFavoriteCards(_username);
+                } else if(state is DeleteCardFailure){
+                  showErrorAlert(state.exception.toString(), context);
                 }
               },
               child: Container(),

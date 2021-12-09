@@ -10,6 +10,7 @@ import 'package:flutter_collegeapp/quiz/add_quiz.dart';
 import 'package:flutter_collegeapp/quiz/quizzes.dart';
 import 'package:flutter_collegeapp/sign_up/sign_up.dart';
 import 'package:flutter_collegeapp/statistics/statistics.dart';
+import 'package:flutter_collegeapp/students/students.dart';
 import 'package:flutter_collegeapp/study_cards/add_card.dart';
 import 'package:flutter_collegeapp/bloc/cards/card_cubit.dart';
 import 'package:flutter_collegeapp/study_cards/learn_study_cards.dart';
@@ -32,6 +33,7 @@ import 'home/home.dart';
 import 'lesson/lesson.dart';
 import 'bloc/lessons/lesson_cubit.dart';
 import 'bloc/quizzes/quiz_cubit.dart';
+import 'lesson/lessons_list.dart';
 
 void main() {
   runApp(
@@ -180,6 +182,18 @@ void main() {
             BlocProvider(
               create: (context) => CoursesCubit(),
               child: TeacherCoursesTabView(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: CoursesPage(),
+            ),
+            BlocProvider(
+              create: (context) => UsersCubit(),
+              child: StudentsPage(),
+            ),
+            BlocProvider(
+              create: (context) => UserCoursesCubit(),
+              child: StudentsPage(),
             ),
           ],
           child: App(),

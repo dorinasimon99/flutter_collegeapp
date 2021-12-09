@@ -8,7 +8,7 @@ class CardsRepository {
   Future<List<CardData>> getFavoriteCards(String username) async {
     try {
       var userCourses = await UserCoursesRepository().getUserCoursesByUsername(username);
-      var cards = await Amplify.DataStore.query(CardData.classType, where: CardData.ISFAVORITE.eq('true').or(CardData.ISFAVORITE.eq(true)));
+      var cards = await Amplify.DataStore.query(CardData.classType, where: CardData.ISFAVORITE.contains(username));
       var items = <CardData>[];
       for(var item in cards){
         if(userCourses.any((element) => element.courseCode == item.courseCode)){
@@ -57,6 +57,16 @@ class CardsRepository {
   Future<void> updateCard(CardData card) async {
     try {
       await Amplify.DataStore.save(card);
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  Future<void> deleteCard(CardData card, String username) async {
+    try {
+      CardData updateCard = (await Amplify.DataStore.query(CardData.classType, where: CardData.ID.eq(card.id)))[0];
+      updateCard.isFavorite?.remove(username);
+      await Amplify.DataStore.save(updateCard);
     } catch (e) {
       throw e;
     }

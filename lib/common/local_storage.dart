@@ -35,8 +35,12 @@ class LocalStorage {
     return prefs.getInt(key) ?? null;
   }
 
-  Future<void> saveInt(String key, int value) async {
+  Future<void> saveInt(String key, int? value) async {
     final prefs = await SharedPreferences.getInstance();
-    prefs.setInt(key, value);
+    if(value == null){
+      prefs.remove(key);
+    } else {
+      prefs.setInt(key, value);
+    }
   }
 }

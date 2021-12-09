@@ -7,10 +7,12 @@ import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/bloc/todos/todos_cubit.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
+import 'package:flutter_collegeapp/common/roles.dart';
 import 'package:flutter_collegeapp/models/CourseData.dart';
 import 'package:flutter_collegeapp/models/LessonData.dart';
 import 'package:flutter_collegeapp/models/TodoData.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
 
 class AddTodoPage extends StatefulWidget {
@@ -25,11 +27,27 @@ class _AddTodoPageState extends State<AddTodoPage> {
   var _todoNameController = TextEditingController();
   String _selectedDate = "";
   LessonData? _selectedLesson;
+  String? _role;
+
+  @override
+  void initState(){
+    super.initState();
+    _getUserRole();
+  }
 
   @override
   void dispose(){
     _todoNameController.dispose();
     super.dispose();
+  }
+
+  void _getUserRole() async {
+    var role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
+    if(role != null){
+      setState(() {
+        _role = role;
+      });
+    }
   }
 
   @override
@@ -65,62 +83,72 @@ class _AddTodoPageState extends State<AddTodoPage> {
               cursorColor: Resources.customColors.cardGreen,
               style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
             ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Flexible(
-                  child: Text(
-                    _selectedDate,
-                    style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Flexible(
+                    child: Text(
+                      _selectedDate,
+                      style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                    ),
                   ),
-                ),
-                MaterialButton(
-                  onPressed: () => _selectDate(context),
-                  color: Resources.customColors.cardGreen,
-                  child: Text(
-                    AppLocalizations.of(context)?.add_deadline.toUpperCase() ?? 'ADD DEADLINE',
+                  MaterialButton(
+                    onPressed: () => _selectDate(context),
+                    color: Resources.customColors.cardGreen,
+                    child: Text(
+                      AppLocalizations.of(context)?.add_deadline.toUpperCase() ?? 'ADD DEADLINE',
+                      style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+                    ),
+                  ),
+
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '${AppLocalizations.of(context)?.lesson ?? 'Lesson'}:',
                     style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
                   ),
-                ),
-
-              ],
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '${AppLocalizations.of(context)?.lesson ?? 'Lesson'}:',
-                  style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
-                ),
-                BlocProvider(
-                  create: (context) => LessonsCubit()..getCourseLessons(course.courseCode),
-                  child: BlocBuilder<LessonsCubit, LessonsState>(
-                    builder: (context, state) {
-                      if(state is ListCourseLessonsSuccess){
-                        return DropdownButton<LessonData>(
-                            value: _selectedLesson,
-                            items: state.lessons.map<DropdownMenuItem<LessonData>>((LessonData value){
-                              return DropdownMenuItem<LessonData>(
-                                  value: value,
-                                  child: Text(
-                                    value.title.toString(),
-                                    style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
-                                  )
-                              );
-                            }).toList(),
-                          onChanged: (LessonData? newValue){
-                            setState(() {
-                              _selectedLesson = newValue;
-                            });
-                          },
-                        );
-                      } else if(state is ListCourseLessonsFailure){
-                        return Center(child: Text(state.exception.toString()));
-                      } else return LoadingView();
-                    },
+                  /*Flexible(
+                    child:*/ BlocProvider(
+                      create: (context) => LessonsCubit()..getCourseLessons(course.courseCode),
+                      child: BlocBuilder<LessonsCubit, LessonsState>(
+                        builder: (context, state) {
+                          if(state is ListCourseLessonsSuccess){
+                            return Flexible(
+                              child: DropdownButton<LessonData>(
+                                  value: _selectedLesson,
+                                  items: state.lessons.map<DropdownMenuItem<LessonData>>((LessonData value){
+                                    return DropdownMenuItem<LessonData>(
+                                        value: value,
+                                        child: Text(
+                                              value.title.toString(),
+                                              style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+                                            ),
+                                    );
+                                  }).toList(),
+                                onChanged: (LessonData? newValue){
+                                  setState(() {
+                                    _selectedLesson = newValue;
+                                  });
+                                },
+                              ),
+                            );
+                          } else if(state is ListCourseLessonsFailure){
+                            return Center(child: Text(state.exception.toString()));
+                          } else return LoadingView();
+                        },
+                      ),
+                    //),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
             BlocListener<TodosCubit, TodosState>(
               listener: (context, state) {
@@ -154,11 +182,38 @@ class _AddTodoPageState extends State<AddTodoPage> {
   }
 
   _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
+    DateTime? picked = await showRoundedDatePicker(
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime(DateTime.now().year),
         lastDate: DateTime(DateTime.now().year+5),
+      theme: ThemeData(primaryColor: Resources.customColors.cardGreen, accentColor: Resources.customColors.cardGreen),
+      styleDatePicker: MaterialRoundedDatePickerStyle(
+        textStyleDayButton: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+        textStyleYearButton: Resources.customTextStyles.getCustomTextStyle(fontSize: 30),
+        textStyleDayHeader: Resources.customTextStyles.getCustomTextStyle(fontSize: 20, color: Colors.grey),
+        textStyleCurrentDayOnCalendar: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+        textStyleDayOnCalendar: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+        textStyleDayOnCalendarSelected: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+        textStyleDayOnCalendarDisabled: Resources.customTextStyles.getCustomTextStyle(fontSize: 20, color: Colors.grey),
+        textStyleMonthYearHeader: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 25),
+        paddingMonthHeader: EdgeInsets.all(32),
+        paddingActionBar: EdgeInsets.all(16),
+        sizeArrow: 50,
+        colorArrowNext: Colors.black,
+        colorArrowPrevious: Colors.black,
+        marginLeftArrowPrevious: 16,
+        marginTopArrowPrevious: 16,
+        marginTopArrowNext: 16,
+        marginRightArrowNext: 32,
+        textStyleButtonPositive: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Resources.customColors.datePickerButtonGreen),
+        textStyleButtonNegative: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Resources.customColors.datePickerButtonGreen.withOpacity(0.5)),
+        decorationDateSelected: BoxDecoration(color: Resources.customColors.cardGreen, shape: BoxShape.circle),
+        backgroundPicker: Colors.white,
+        backgroundActionBar: Colors.white,
+        backgroundHeaderMonth: Colors.white,
+
+      )
     );
     if(picked != null && picked != DateTime.now()){
       setState(() {

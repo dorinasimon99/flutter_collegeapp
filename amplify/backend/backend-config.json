@@ -53,7 +53,7 @@
   },
   "function": {},
   "storage": {
-    "s3Avatars": {
+    "s3mystudentappstoraged6g3v57wcp7av": {
       "service": "S3",
       "providerPlugin": "awscloudformation",
       "dependsOn": []

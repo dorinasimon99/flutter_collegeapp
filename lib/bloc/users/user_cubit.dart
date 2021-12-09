@@ -18,6 +18,18 @@ class ListUsersFailure extends UsersState {
   ListUsersFailure({required this.exception});
 }
 
+class ListStudentsSuccess extends UsersState {
+  final List<UserData> users;
+
+  ListStudentsSuccess({required this.users});
+}
+
+class ListStudentsFailure extends UsersState {
+  final Object exception;
+
+  ListStudentsFailure({required this.exception});
+}
+
 class GetUserSuccess extends UsersState {
   final UserData user;
 
@@ -69,6 +81,19 @@ class UsersCubit extends Cubit<UsersState> {
       emit(ListUsersSuccess(users: users));
     } catch (e) {
       emit(ListUsersFailure(exception: e));
+    }
+  }
+
+  void getStudents(List<String> usernames) async {
+    if (state is ListStudentsSuccess == false) {
+      emit(LoadingUsers());
+    }
+
+    try {
+      final users = await _usersRepo.getStudents(usernames);
+      emit(ListStudentsSuccess(users: users));
+    } catch (e) {
+      emit(ListStudentsFailure(exception: e));
     }
   }
 

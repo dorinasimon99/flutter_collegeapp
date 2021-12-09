@@ -25,6 +25,7 @@ class _LessonPageState extends State<LessonPage> {
   LessonData? lesson;
   String? _role;
   String? _name;
+  String? _username;
   bool _refresh = false;
 
   @override
@@ -36,10 +37,12 @@ class _LessonPageState extends State<LessonPage> {
   void _getUser() async {
     var role = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_ROLE);
     var localName = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
+    var localUsername = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
     if(role != null){
       setState(() {
         _role = role;
         _name = localName;
+        _username = localUsername;
       });
     }
   }
@@ -123,7 +126,7 @@ class _LessonPageState extends State<LessonPage> {
                       icon: Icon(Icons.refresh, color: Color(0xFFBED7BF), size: 30),
                     ),
                     _role == Roles.instance.teacher ? TextButton(
-                      onPressed: () => Navigator.pushNamed(context, 'addQuiz', arguments: lesson!.id),
+                      onPressed: () => Navigator.pushNamed(context, 'addQuiz', arguments: [lesson!.id]),
                       child: Text(
                         '+',
                         style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 30),
@@ -136,6 +139,10 @@ class _LessonPageState extends State<LessonPage> {
                     if(state is CreateQuizSuccess){
                       BlocProvider.of<QuizzesCubit>(context)..getQuizzes(lesson!.id, _role);
                     } else if(state is CreateQuizFailure){
+                      showErrorAlert(state.exception.toString(), context);
+                    } else if(state is UpdateQuizSuccess){
+                      BlocProvider.of<QuizzesCubit>(context)..getQuizzes(lesson!.id, _role);
+                    } else if(state is UpdateQuizFailure){
                       showErrorAlert(state.exception.toString(), context);
                     }
                   },
@@ -167,7 +174,7 @@ class _LessonPageState extends State<LessonPage> {
 
     void _navigateToAddLesson() async {
       Navigator.pushNamed(context, 'addLesson', arguments: [UserCourse(name: _name!,
-          username: lesson!.owner, courseCode: lesson!.courseCode), lesson]);
+          username: _username!, courseCode: lesson!.courseCode), lesson]);
     }
 }
 
@@ -229,11 +236,11 @@ class _QuizItemState extends State<QuizItem> {
                   Switch(
                     value: _isVisible,
                     onChanged: (visible) {
+                      QuizData quiz = widget.quiz.copyWith(visible: visible);
+                      BlocProvider.of<QuizzesCubit>(context)..updateQuiz(quiz);
                       setState(() {
                         _isVisible = visible;
                       });
-                      QuizData quiz = widget.quiz.copyWith(visible: _isVisible);
-                      BlocProvider.of<QuizzesCubit>(context)..updateQuiz(quiz);
                       },
                     activeTrackColor: Color(0xFF98AC99),
                     activeColor: Colors.white,

@@ -14,7 +14,8 @@
     "categories": {
       "auth": {
         "mystudentapp61fa3dde": {},
-        "userPoolGroups": {}
+        "userPoolGroups": {},
+        "true": {}
       }
     }
   }

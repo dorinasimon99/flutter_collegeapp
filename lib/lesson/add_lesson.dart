@@ -7,6 +7,7 @@ import 'package:flutter_collegeapp/common/resources.dart';
 import 'package:flutter_collegeapp/models/LessonData.dart';
 import 'package:flutter_collegeapp/models/UserCourse.dart';
 import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:flutter_rounded_date_picker/flutter_rounded_date_picker.dart';
 import 'package:intl/intl.dart';
 
 class AddLessonPage extends StatefulWidget {
@@ -29,6 +30,13 @@ class _AddLessonPageState extends State<AddLessonPage> {
   int _currentEndMinute = 0;
   bool _editing = false;
   LessonData? editLesson;
+
+  @override
+  void dispose(){
+    _titleController.dispose();
+    _descriptionController.dispose();
+    super.dispose();
+  }
 
   void _setEditing(LessonData editLesson){
     setState(() {
@@ -79,7 +87,7 @@ class _AddLessonPageState extends State<AddLessonPage> {
                         } else if(state is CreateLessonFailure){
                           showErrorAlert(state.exception.toString(), context);
                         } else if(state is UpdateLessonSuccess){
-                          showSnackBar(context, AppLocalizations.of(context)?.lesson_created ?? 'Lesson created', onActionPressed: () => Navigator.pop(context));
+                          showSnackBar(context, AppLocalizations.of(context)?.lesson_updated ?? 'Lesson updated', onActionPressed: () => Navigator.pop(context));
                         } else if(state is UpdateLessonFailure){
                           showErrorAlert(state.exception.toString(), context);
                         }
@@ -155,11 +163,37 @@ class _AddLessonPageState extends State<AddLessonPage> {
   }
 
   _selectDate(BuildContext context) async {
-    DateTime? picked = await showDatePicker(
+    DateTime? picked = await showRoundedDatePicker(
         context: context,
         initialDate: DateTime.now(),
         firstDate: DateTime(DateTime.now().year),
-        lastDate: DateTime(DateTime.now().year+5)
+        lastDate: DateTime(DateTime.now().year+5),
+        theme: ThemeData(primaryColor: Resources.customColors.cardGreen, accentColor: Resources.customColors.cardGreen),
+        styleDatePicker: MaterialRoundedDatePickerStyle(
+          textStyleDayButton: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
+          textStyleYearButton: Resources.customTextStyles.getCustomTextStyle(fontSize: 30),
+          textStyleDayHeader: Resources.customTextStyles.getCustomTextStyle(fontSize: 20, color: Colors.grey),
+          textStyleCurrentDayOnCalendar: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+          textStyleDayOnCalendar: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
+          textStyleDayOnCalendarSelected: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
+          textStyleDayOnCalendarDisabled: Resources.customTextStyles.getCustomTextStyle(fontSize: 20, color: Colors.grey),
+          textStyleMonthYearHeader: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 25),
+          paddingMonthHeader: EdgeInsets.all(32),
+          paddingActionBar: EdgeInsets.all(16),
+          sizeArrow: 50,
+          colorArrowNext: Colors.black,
+          colorArrowPrevious: Colors.black,
+          marginLeftArrowPrevious: 16,
+          marginTopArrowPrevious: 16,
+          marginTopArrowNext: 16,
+          marginRightArrowNext: 32,
+          textStyleButtonPositive: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Resources.customColors.datePickerButtonGreen),
+          textStyleButtonNegative: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20, color: Resources.customColors.datePickerButtonGreen.withOpacity(0.5)),
+          decorationDateSelected: BoxDecoration(color: Resources.customColors.cardGreen, shape: BoxShape.circle),
+          backgroundPicker: Colors.white,
+          backgroundActionBar: Colors.white,
+          backgroundHeaderMonth: Colors.white,
+        )
     );
     if(picked != null && picked != DateTime.now()){
       setState(() {
@@ -169,27 +203,29 @@ class _AddLessonPageState extends State<AddLessonPage> {
   }
 
   void _saveLesson(){
-    if(owner != null && courseCode != null){
-      if(_editing){
-        var lesson = editLesson!.copyWith(
-            date: _selectedDate,
-            time: '$_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
-            owner: owner!,
-            courseCode: courseCode!,
-            title: _titleController.text,
-            description: _descriptionController.text
-        );
-        BlocProvider.of<LessonsCubit>(context)..updateLesson(lesson);
-      } else {
-        var lesson = LessonData(
-            date: _selectedDate,
-            time: '$_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
-            owner: owner!,
-            courseCode: courseCode!,
-            title: _titleController.text,
-            description: _descriptionController.text
-        );
-        BlocProvider.of<LessonsCubit>(context)..createLesson(lesson);
+    if(_currentEndHour < _currentStartHour || (_currentEndHour == _currentStartHour && _currentEndMinute < _currentStartMinute)){
+      showErrorAlert(AppLocalizations.of(context)?.end_before_start ?? "End time can't be before start time!", context);
+    } else {
+      if(owner != null && courseCode != null){
+        if(_editing){
+          var lesson = editLesson!.copyWith(
+              date: _selectedDate,
+              time: '$_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
+              courseCode: courseCode!,
+              title: _titleController.text,
+              description: _descriptionController.text
+          );
+          BlocProvider.of<LessonsCubit>(context)..updateLesson(lesson);
+        } else {
+          var lesson = LessonData(
+              date: _selectedDate,
+              time: '$_currentStartHour:${addZero(_currentStartMinute)}-$_currentEndHour:${addZero(_currentEndMinute)}',
+              courseCode: courseCode!,
+              title: _titleController.text,
+              description: _descriptionController.text
+          );
+          BlocProvider.of<LessonsCubit>(context)..createLesson(lesson);
+        }
       }
     }
   }

@@ -13,7 +13,11 @@
 * permissions and limitations under the License.
 */
 
-// ignore_for_file: public_member_api_docs
+// NOTE: This file is generated and may not follow lint rules defined in your app
+// Generated files can be excluded from analysis in analysis_options.yaml
+// For more info, see: https://dart.dev/guides/language/analysis-options#excluding-code-from-analysis
+
+// ignore_for_file: public_member_api_docs, file_names, unnecessary_new, prefer_if_null_operators, prefer_const_constructors, slash_for_doc_comments, annotate_overrides, non_constant_identifier_names, unnecessary_string_interpolations, prefer_adjacent_string_concatenation, unnecessary_const, dead_code
 
 import 'package:amplify_datastore_plugin_interface/amplify_datastore_plugin_interface.dart';
 import 'package:flutter/foundation.dart';
@@ -54,12 +58,8 @@ class UserData extends Model {
     }
   }
   
-  int get actualSemester {
-    try {
-      return _actualSemester!;
-    } catch(e) {
-      throw new DataStoreException(DataStoreExceptionMessages.codeGenRequiredFieldForceCastExceptionMessage, recoverySuggestion: DataStoreExceptionMessages.codeGenRequiredFieldForceCastRecoverySuggestion, underlyingException: e.toString());
-    }
+  int? get actualSemester {
+    return _actualSemester;
   }
   
   String? get avatar {
@@ -74,9 +74,9 @@ class UserData extends Model {
     }
   }
   
-  const UserData._internal({required this.id, required username, required role, required actualSemester, avatar, required name}): _username = username, _role = role, _actualSemester = actualSemester, _avatar = avatar, _name = name;
+  const UserData._internal({required this.id, required username, required role, actualSemester, avatar, required name}): _username = username, _role = role, _actualSemester = actualSemester, _avatar = avatar, _name = name;
   
-  factory UserData({String? id, required String username, required String role, required int actualSemester, String? avatar, required String name}) {
+  factory UserData({String? id, required String username, required String role, int? actualSemester, String? avatar, required String name}) {
     return UserData._internal(
       id: id == null ? UUID.getUUID() : id,
       username: username,
@@ -135,7 +135,7 @@ class UserData extends Model {
     : id = json['id'],
       _username = json['username'],
       _role = json['role'],
-      _actualSemester = json['actualSemester'],
+      _actualSemester = (json['actualSemester'] as num?)?.toInt(),
       _avatar = json['avatar'],
       _name = json['name'];
   
@@ -180,7 +180,7 @@ class UserData extends Model {
     
     modelSchemaDefinition.addField(ModelFieldDefinition.field(
       key: UserData.ACTUALSEMESTER,
-      isRequired: true,
+      isRequired: false,
       ofType: ModelFieldType(ModelFieldTypeEnum.int)
     ));
     

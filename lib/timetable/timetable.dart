@@ -32,7 +32,7 @@ class _TimetablePageState extends State<TimetablePage> {
   String? _localName;
   int? _localSemester;
 
-  void checkConnectivity() async {
+  void _getUser() async {
     var username = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
     var name = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
     var actualSemester = await LocalStorage.localStorage.readInt(LocalStorage.SIGNED_IN_SEMESTER);
@@ -49,7 +49,7 @@ class _TimetablePageState extends State<TimetablePage> {
 
   @override
   void initState(){
-    checkConnectivity();
+    _getUser();
     super.initState();
   }
 

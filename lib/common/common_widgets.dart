@@ -16,7 +16,9 @@ AppBar Header(BuildContext context, {bool isMenu = true}){
     : IconButton(
       icon: Image.asset('assets/back.png'),
       iconSize: 120,
-      onPressed: () => Navigator.pop(context),
+      onPressed: () {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        Navigator.pop(context);},
       splashRadius: 36,
     ),
     toolbarHeight: 80.0,
@@ -28,13 +30,14 @@ AppBar Header(BuildContext context, {bool isMenu = true}){
 
 Widget HomeButton(BuildContext context){
   return Container(
-    height: 80,
+    height: 70,
     width: MediaQuery.of(context).size.width,
     child: Stack(
       alignment: Alignment.bottomCenter,
       children: [
         Positioned(
-            bottom: 20,
+            bottom: 5,
+            top: 5,
             child: IconButton(
               onPressed: () {
                 Navigator.popUntil(context, (route) => false);
@@ -150,7 +153,7 @@ Future<void> showErrorAlert(String text, BuildContext context) async {
             child: Flexible(
               child: Text(
                 text,
-                style: Resources.customTextStyles.getCustomTextStyle(fontSize: 16, color: Colors.white),
+                style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20, color: Colors.white),
               ),
             ),
           ),
@@ -167,51 +170,6 @@ Future<void> showErrorAlert(String text, BuildContext context) async {
           ],
         );
       },
-  );
-}
-
-Future<bool?> showContinueAlert(String text, BuildContext context) async {
-  return showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: Color(0xFFBED7BF),
-        scrollable: true,
-        title: Text(
-          AppLocalizations.of(context)?.error ?? "Error",
-          style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 24),
-        ),
-        content: SingleChildScrollView(
-          child: Flexible(
-            child: Text(
-              text,
-              style: Resources.customTextStyles.getCustomTextStyle(fontSize: 16),
-            ),
-          ),
-        ),
-        actions: <Widget>[
-          TextButton(
-            child: Text(
-              AppLocalizations.of(context)?.cancel ?? 'Cancel',
-              style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              Navigator.pop(context, false);
-            },
-          ),
-          TextButton(
-            child: Text(
-              AppLocalizations.of(context)?.ok ?? 'OK',
-              style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 20),
-            ),
-            onPressed: () {
-              Navigator.pop(context, true);
-            },
-          ),
-        ],
-      );
-    },
   );
 }
 

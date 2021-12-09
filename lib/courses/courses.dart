@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_collegeapp/bloc/users/user_cubit.dart';
 import 'package:flutter_collegeapp/common/common_widgets.dart';
 import 'package:flutter_collegeapp/common/local_storage.dart';
 import 'package:flutter_collegeapp/common/resources.dart';
@@ -26,8 +27,8 @@ class _CoursesPageState extends State<CoursesPage> {
     currentName = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_NAME);
     currentUsername = await LocalStorage.localStorage.readString(LocalStorage.SIGNED_IN_USER_NAME);
     currentUserSemester = await LocalStorage.localStorage.readInt(LocalStorage.SIGNED_IN_SEMESTER);
-    if(currentName != null && currentUserSemester != null){
-      BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester!);
+    if(currentUsername != null){
+      BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester);
     }
   }
 
@@ -48,6 +49,14 @@ class _CoursesPageState extends State<CoursesPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              BlocListener<UsersCubit, UsersState>(
+                  listener: (context, state){
+                    if(state is UpdateUserSuccess){
+                      getUserCourses();
+                    }
+                  },
+                child: Container(),
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -74,11 +83,11 @@ class _CoursesPageState extends State<CoursesPage> {
                           _courses = state.courses;
                         });
                       } else if (state is DeleteCourseSuccess) {
-                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester!);
+                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester);
                       } else if (state is UpdateCourseSuccess){
-                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester!);
+                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester);
                       } else if (state is CreateCourseSuccess){
-                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester!);
+                        BlocProvider.of<CoursesCubit>(context)..getActualSemesterCourses(currentUsername!, currentUserSemester);
                       }
                     },
                     child: ListView(
@@ -125,10 +134,6 @@ class AllCourseItem extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    course.time.split(" ")[1],
-                    style: Resources.customTextStyles.getCustomTextStyle(fontSize: 20),
-                  ),
                   Text(
                     course.courseCode,
                     style: TextStyle(fontFamily: 'Glory', fontSize: 20, color: Colors.black, fontStyle: FontStyle.italic),

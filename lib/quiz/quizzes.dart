@@ -18,7 +18,6 @@ class QuizzesPage extends StatefulWidget {
 class _QuizzesPageState extends State<QuizzesPage> {
   List<QuizData> _quizzes = [];
 
-
   @override
   void initState(){
     BlocProvider.of<QuizzesCubit>(context)..getAllQuizzes();
@@ -39,11 +38,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Flexible(
-                    child: Text(
-                      AppLocalizations.of(context)?.quizzes ?? 'Quizzes',
-                      style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40),
-                    ),
+                  Flexible(child: Text(AppLocalizations.of(context)?.quizzes ?? 'Quizzes', style: Resources.customTextStyles.getCustomBoldTextStyle(fontSize: 40)),
                   ),
                 ],
               ),
@@ -51,9 +46,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                 child: BlocListener<QuizzesCubit, QuizzesState>(
                   listener: (context, state) {
                     if (state is ListAllQuizzesSuccess) {
-                      setState(() {
-                        _quizzes = state.quizzes;
-                      });
+                      setState(() { _quizzes = state.quizzes; });
                     } else if (state is ListAllQuizzesFailure){
                       showErrorAlert(state.exception.toString(), context);
                     } else if(state is UpdateQuizSuccess){
@@ -62,8 +55,7 @@ class _QuizzesPageState extends State<QuizzesPage> {
                       showErrorAlert(state.exception.toString(), context);
                     }
                   },
-                  child: ListView(
-                    shrinkWrap: true,
+                  child: ListView(shrinkWrap: true,
                     children: _quizzes.map((quiz) => AllQuizItem(quiz: quiz)).toList(),
                   ),
                 ),
